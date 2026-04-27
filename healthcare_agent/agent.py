@@ -28,15 +28,14 @@ from shared.tools import (
 # ── Model selection ────────────────────────────────────────────────────────────
 # Set HEALTHCARE_AGENT_MODEL in your .env to switch models.
 #
-# Native Gemini (default — no extra dependencies):
-#   HEALTHCARE_AGENT_MODEL=gemini-2.5-flash
-#
-# Any LiteLLM-supported model (requires OPENAI_API_KEY / ANTHROPIC_API_KEY etc.):
+# All models are handled via LiteLLM. Use the appropriate prefix:
+#   HEALTHCARE_AGENT_MODEL=gemini/gemini-2.5-flash   (Google AI Studio, default)
 #   HEALTHCARE_AGENT_MODEL=openai/gpt-4o
-#   HEALTHCARE_AGENT_MODEL=anthropic/claude-3-5-sonnet-20241022
+#   HEALTHCARE_AGENT_MODEL=anthropic/claude-sonnet-4-6
+#   HEALTHCARE_AGENT_MODEL=vertex_ai/gemini-2.5-flash
 # ──────────────────────────────────────────────────────────────────────────────
-_model_name = os.getenv("HEALTHCARE_AGENT_MODEL", "gemini-2.5-flash")
-_model = _model_name if _model_name.startswith("gemini") else LiteLlm(model=_model_name)
+_model_name = os.getenv("HEALTHCARE_AGENT_MODEL", "gemini/gemini-2.5-flash")
+_model = LiteLlm(model=_model_name)
 
 root_agent = Agent(
     name="healthcare_fhir_agent",

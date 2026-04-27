@@ -31,15 +31,14 @@ from shared.fhir_hook import extract_fhir_context
 # ── Model selection ────────────────────────────────────────────────────────────
 # Set ORCHESTRATOR_MODEL in your .env to switch models.
 #
-# Native Gemini (default — no extra dependencies):
-#   ORCHESTRATOR_MODEL=gemini-2.5-flash
-#
-# Any LiteLLM-supported model (requires OPENAI_API_KEY / ANTHROPIC_API_KEY etc.):
+# All models are handled via LiteLLM. Use the appropriate prefix:
+#   ORCHESTRATOR_MODEL=gemini/gemini-2.5-flash   (Google AI Studio, default)
 #   ORCHESTRATOR_MODEL=openai/gpt-4o
-#   ORCHESTRATOR_MODEL=anthropic/claude-3-5-sonnet-20241022
+#   ORCHESTRATOR_MODEL=anthropic/claude-sonnet-4-6
+#   ORCHESTRATOR_MODEL=vertex_ai/gemini-2.5-flash
 # ──────────────────────────────────────────────────────────────────────────────
-_model_name = os.getenv("ORCHESTRATOR_MODEL", "gemini-2.5-flash")
-_model = _model_name if _model_name.startswith("gemini") else LiteLlm(model=_model_name)
+_model_name = os.getenv("ORCHESTRATOR_MODEL", "gemini/gemini-2.5-flash")
+_model = LiteLlm(model=_model_name)
 
 root_agent = Agent(
     name="orchestrator",

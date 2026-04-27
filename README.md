@@ -120,7 +120,7 @@ Everything else in the repo — agent logic, FHIR tools, middleware, Docker, Clo
 ### Prerequisites
 
 - Python 3.11 or later
-- A [Google AI Studio](https://aistudio.google.com/app/apikey) API key (free)
+- An API key for your chosen model provider (Google AI Studio, OpenAI, or Anthropic)
 - Git
 
 ### 1 — Clone the repository
@@ -154,10 +154,19 @@ cp .env.example .env
 copy .env.example .env
 ```
 
-Open `.env` and set your Google API key:
+Open `.env` and set the API key for your chosen model provider:
 
 ```env
+# Gemini via Google AI Studio (default)
 GOOGLE_API_KEY=your-google-api-key-here
+
+# Or OpenAI
+# OPENAI_API_KEY=your-openai-key-here
+# HEALTHCARE_AGENT_MODEL=openai/gpt-4o-mini
+
+# Or Anthropic
+# ANTHROPIC_API_KEY=your-anthropic-key-here
+# HEALTHCARE_AGENT_MODEL=anthropic/claude-sonnet-4-6
 ```
 
 ### 4 — Run the agents
@@ -270,7 +279,7 @@ Includes two tools that work offline with no external APIs:
 
 ### `orchestrator` — Multi-agent orchestrator
 
-Shows ADK's built-in sub-agent routing (`AgentTool`). Gemini decides which specialist to call based on the question. Both `healthcare_agent` and `general_agent` run in-process as sub-agents — no separate HTTP calls needed.
+Shows ADK's built-in sub-agent routing (`AgentTool`). The model decides which specialist to call based on the question. Both `healthcare_agent` and `general_agent` run in-process as sub-agents — no separate HTTP calls needed.
 
 Session state is shared, so FHIR credentials extracted by the orchestrator's `before_model_callback` are immediately available to the `healthcare_agent`'s tools.
 
@@ -419,13 +428,13 @@ Copy `.env.example` to `.env` and set values before starting any server.
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `GOOGLE_API_KEY` | **Yes** | — | Google AI Studio key for Gemini |
+| `GOOGLE_API_KEY` | If using Gemini | — | Google AI Studio key — required when any agent model is set to `gemini/...`. Not needed if all agents use OpenAI or Anthropic. |
 | `API_KEYS` | No | — | Comma-separated list of valid `X-API-Key` values for authenticated agents, e.g. `key1,key2` |
 | `API_KEY_PRIMARY` | No | — | First named API key slot for authenticated agents |
 | `API_KEY_SECONDARY` | No | — | Second named API key slot for authenticated agents |
-| `GENERAL_AGENT_MODEL` | No | `gemini-2.5-flash` | Model for `general_agent`. Use any LiteLLM-supported model string (e.g. `openai/gpt-4o-mini`, `anthropic/claude-3-5-sonnet-20241022`). |
-| `HEALTHCARE_AGENT_MODEL` | No | `gemini-2.5-flash` | Model for `healthcare_agent`. Same format as `GENERAL_AGENT_MODEL`. |
-| `ORCHESTRATOR_MODEL` | No | `gemini-2.5-flash` | Model for `orchestrator`. Same format as `GENERAL_AGENT_MODEL`. |
+| `GENERAL_AGENT_MODEL` | No | `gemini/gemini-2.5-flash` | Model for `general_agent`. All models go through LiteLLM — use provider-prefixed format (e.g. `openai/gpt-4o-mini`, `anthropic/claude-sonnet-4-6`, `vertex_ai/gemini-2.5-flash`). |
+| `HEALTHCARE_AGENT_MODEL` | No | `gemini/gemini-2.5-flash` | Model for `healthcare_agent`. Same format as `GENERAL_AGENT_MODEL`. |
+| `ORCHESTRATOR_MODEL` | No | `gemini/gemini-2.5-flash` | Model for `orchestrator`. Same format as `GENERAL_AGENT_MODEL`. |
 | `OPENAI_API_KEY` | No | — | Required when any `*_MODEL` is set to an `openai/` model. |
 | `ANTHROPIC_API_KEY` | No | — | Required when any `*_MODEL` is set to an `anthropic/` model. |
 | `GOOGLE_GENAI_USE_VERTEXAI` | No | `FALSE` | Set to `TRUE` to use Vertex AI instead of AI Studio. Vertex AI is billed from the first call — leave `FALSE` to stay on the free AI Studio quota. |
@@ -610,46 +619,13 @@ docker compose logs -f healthcare # view one agent's logs only
 docker compose up --build
 ```
 
-**Run a single agent only (e.g. for testing just `general_agent`):**
+**Run a single agent only:**
 
 ```bash
-docker compose up general
+docker compose up healthcare   # http://localhost:8001
+docker compose up general      # http://localhost:8002
+docker compose up orchestrator # http://localhost:8003
 ```
-
----
-
-### Run a single agent manually with plain Docker
-
-```bash
-# Build the image once
-docker build -t adk-agents .
-
-# Start the general_agent on port 8002 with Gemini (default)
-docker run --rm -p 8002:8002 \
-  -e AGENT_MODULE=general_agent.app:a2a_app \
-  -e PORT=8002 \
-  -e GOOGLE_API_KEY=your-key-here \
-  -e GOOGLE_GENAI_USE_VERTEXAI=FALSE \
-  adk-agents
-
-# Or with OpenAI
-docker run --rm -p 8002:8002 \
-  -e AGENT_MODULE=general_agent.app:a2a_app \
-  -e PORT=8002 \
-  -e GENERAL_AGENT_MODEL=openai/gpt-4o-mini \
-  -e OPENAI_API_KEY=your-openai-key-here \
-  adk-agents
-
-# Or with Anthropic Claude
-docker run --rm -p 8002:8002 \
-  -e AGENT_MODULE=general_agent.app:a2a_app \
-  -e PORT=8002 \
-  -e GENERAL_AGENT_MODEL=anthropic/claude-3-5-sonnet-20241022 \
-  -e ANTHROPIC_API_KEY=your-anthropic-key-here \
-  adk-agents
-```
-
-Change `AGENT_MODULE` and `-p` to start a different agent.
 
 ---
 
@@ -663,7 +639,7 @@ Cloud Run is the recommended way to publish these agents with a permanent public
 | Compute (memory) | 360,000 GB-seconds |
 | Compute (CPU) | 180,000 vCPU-seconds |
 
-This is more than enough for development and light production use. **Gemini model calls are billed through the AI Studio API** — using `GOOGLE_GENAI_USE_VERTEXAI=FALSE` (the default in `.env.example`) keeps you on the AI Studio free quota and avoids Vertex AI charges entirely.
+This is more than enough for development and light production use. **Gemini model calls via Google AI Studio (`gemini/...`) are on the free AI Studio quota.** To avoid Vertex AI billing, use the `gemini/` prefix (default) rather than `vertex_ai/`.
 
 > **Avoid Agent Engine.** Google ADK also offers "Agent Engine" (Vertex AI Managed Agents), which is a paid service with no free tier. The `gcloud run deploy` approach used here deploys to standard Cloud Run, which has the free tier above.
 
@@ -715,7 +691,7 @@ All three agents are built from the **same `Dockerfile`** at the root of the rep
 gcloud run deploy healthcare-agent \
   --source . \
   --region us-central1 \
-  --set-env-vars "AGENT_MODULE=healthcare_agent.app:a2a_app,GOOGLE_GENAI_USE_VERTEXAI=FALSE" \
+  --set-env-vars "AGENT_MODULE=healthcare_agent.app:a2a_app" \
   --set-secrets "GOOGLE_API_KEY=google-api-key:latest" \
   --allow-unauthenticated \
   --min-instances 0 \
@@ -728,7 +704,7 @@ gcloud run deploy healthcare-agent \
 gcloud run deploy general-agent \
   --source . \
   --region us-central1 \
-  --set-env-vars "AGENT_MODULE=general_agent.app:a2a_app,GOOGLE_GENAI_USE_VERTEXAI=FALSE" \
+  --set-env-vars "AGENT_MODULE=general_agent.app:a2a_app" \
   --set-secrets "GOOGLE_API_KEY=google-api-key:latest" \
   --allow-unauthenticated \
   --min-instances 0 \
@@ -741,7 +717,7 @@ gcloud run deploy general-agent \
 gcloud run deploy orchestrator \
   --source . \
   --region us-central1 \
-  --set-env-vars "AGENT_MODULE=orchestrator.app:a2a_app,GOOGLE_GENAI_USE_VERTEXAI=FALSE" \
+  --set-env-vars "AGENT_MODULE=orchestrator.app:a2a_app" \
   --set-secrets "GOOGLE_API_KEY=google-api-key:latest" \
   --allow-unauthenticated \
   --min-instances 0 \
@@ -775,7 +751,7 @@ gcloud run deploy healthcare-agent \
   --max-instances 3
 ```
 
-Replace `OPENAI_API_KEY` / `openai/gpt-4o-mini` with `ANTHROPIC_API_KEY` / `anthropic/claude-3-5-sonnet-20241022` for Claude. Each agent has its own model var (`GENERAL_AGENT_MODEL`, `HEALTHCARE_AGENT_MODEL`, `ORCHESTRATOR_MODEL`) so you can mix providers across services.
+Replace `OPENAI_API_KEY` / `openai/gpt-4o-mini` with `ANTHROPIC_API_KEY` / `anthropic/claude-sonnet-4-6` for Claude. Each agent has its own model var (`GENERAL_AGENT_MODEL`, `HEALTHCARE_AGENT_MODEL`, `ORCHESTRATOR_MODEL`) so you can mix providers across services.
 
 ---
 
@@ -826,7 +802,7 @@ curl -X POST https://general-agent-abc123-uc.a.run.app/ \
 
 | Setting | Why it matters |
 |---|---|
-| `GOOGLE_GENAI_USE_VERTEXAI=FALSE` | Uses AI Studio API key — Gemini free quota. Vertex AI is billed from the first call. |
+| Use `gemini/` model prefix (default) | Routes through AI Studio — free Gemini quota. Switch to `vertex_ai/` only if you have a Vertex AI project. |
 | `--min-instances 0` | Container scales to zero when idle — no compute charge while no requests arrive. |
 | `--max-instances 3` | Caps concurrency during development so you don't accidentally burn compute. |
 | `--region us-central1` | Cloud Run free tier applies to this region; not all regions qualify. |
