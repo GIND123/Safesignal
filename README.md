@@ -437,7 +437,8 @@ Copy `.env.example` to `.env` and set values before starting any server.
 | `ORCHESTRATOR_MODEL` | No | `gemini/gemini-2.5-flash` | Model for `orchestrator`. Same format as `GENERAL_AGENT_MODEL`. |
 | `OPENAI_API_KEY` | No | — | Required when any `*_MODEL` is set to an `openai/` model. |
 | `ANTHROPIC_API_KEY` | No | — | Required when any `*_MODEL` is set to an `anthropic/` model. |
-| `GOOGLE_GENAI_USE_VERTEXAI` | No | `FALSE` | Set to `TRUE` to use Vertex AI instead of AI Studio. Vertex AI is billed from the first call — leave `FALSE` to stay on the free AI Studio quota. |
+| `VERTEXAI_PROJECT` | No | — | GCP project ID — required when any `*_MODEL` is set to `vertex_ai/...`. Run `gcloud auth application-default login` for credentials. |
+| `VERTEXAI_LOCATION` | No | — | GCP region for Vertex AI (e.g. `us-central1`). Required alongside `VERTEXAI_PROJECT` when using `vertex_ai/` models. |
 | `BASE_URL` | No | — | If all agents run behind a single tunnel (e.g. ngrok), set this to override all three agent URLs at once. Individual `*_URL` vars take precedence if set. |
 | `PO_PLATFORM_BASE_URL` | No | `http://localhost:5139` | Base URL of your Prompt Opinion workspace. Used to construct the FHIR extension URI in the agent card for `healthcare_agent` and `orchestrator`. Set this to your actual workspace URL (e.g. `https://your-workspace.promptopinion.ai`). |
 | `LOG_FULL_PAYLOAD` | No | `true` | Log full JSON-RPC request body on each request |
