@@ -18,16 +18,31 @@ To add another sub-agent:
   3. Add AgentTool(agent=your_new_agent) to the tools list.
   4. Update the instruction to describe when to use it.
 """
+import os
+
 from google.adk.agents import Agent
+from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools.agent_tool import AgentTool
 
 from healthcare_agent.agent import root_agent as healthcare_agent
 from general_agent.agent import root_agent as general_agent
 from shared.fhir_hook import extract_fhir_context
 
+# ── Model selection ────────────────────────────────────────────────────────────
+# Set ORCHESTRATOR_MODEL in your .env to switch models.
+#
+# All models are handled via LiteLLM. Use the appropriate prefix:
+#   ORCHESTRATOR_MODEL=gemini/gemini-2.5-flash   (Google AI Studio, default)
+#   ORCHESTRATOR_MODEL=openai/gpt-4o
+#   ORCHESTRATOR_MODEL=anthropic/claude-sonnet-4-6
+#   ORCHESTRATOR_MODEL=vertex_ai/gemini-2.5-flash
+# ──────────────────────────────────────────────────────────────────────────────
+_model_name = os.getenv("ORCHESTRATOR_MODEL", "gemini/gemini-2.5-flash")
+_model = LiteLlm(model=_model_name)
+
 root_agent = Agent(
     name="orchestrator",
-    model="gemini-2.5-flash",
+    model=_model,
     description=(
         "A clinical orchestrator that routes questions to the right specialist agent. "
         "Delegates FHIR patient data queries to healthcare_fhir_agent and "
