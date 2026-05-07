@@ -13,3 +13,7 @@ litellm==1.83.7
 
 # ASGI server
 uvicorn>=0.41.0
+
+# MCP SDK — SafeSignal MCP server (The Superpower)
+# Provides FastMCP for building Model Context Protocol servers
+mcp>=1.9.0

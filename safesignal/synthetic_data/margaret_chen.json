@@ -1,0 +1,601 @@
+{
+  "resourceType": "Bundle",
+  "id": "margaret-chen-bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "fullUrl": "Patient/patient-mc-071",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "patient-mc-071",
+        "name": [
+          {
+            "use": "official",
+            "family": "Chen",
+            "given": ["Margaret"]
+          }
+        ],
+        "birthDate": "1955-04-12",
+        "gender": "female",
+        "active": true,
+        "telecom": [
+          {"system": "phone", "value": "555-867-5309", "use": "home"}
+        ],
+        "address": [
+          {
+            "line": ["4 Privet Drive"],
+            "city": "Springfield",
+            "state": "IL",
+            "postalCode": "62701"
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Patient/patient-mc-071"}
+    },
+    {
+      "fullUrl": "Condition/cond-dm",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-dm",
+        "clinicalStatus": {
+          "coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active"}]
+        },
+        "code": {
+          "coding": [{"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "E11.9", "display": "Type 2 diabetes mellitus without complications"}],
+          "text": "Type 2 diabetes mellitus"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "onsetDateTime": "2018-03-01",
+        "recordedDate": "2018-03-01"
+      },
+      "request": {"method": "PUT", "url": "Condition/cond-dm"}
+    },
+    {
+      "fullUrl": "Condition/cond-htn",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-htn",
+        "clinicalStatus": {
+          "coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active"}]
+        },
+        "code": {
+          "coding": [{"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "I10", "display": "Essential (primary) hypertension"}],
+          "text": "Essential hypertension"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "onsetDateTime": "2015-06-15",
+        "recordedDate": "2015-06-15"
+      },
+      "request": {"method": "PUT", "url": "Condition/cond-htn"}
+    },
+    {
+      "fullUrl": "Condition/cond-afib",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-afib",
+        "clinicalStatus": {
+          "coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active"}]
+        },
+        "code": {
+          "coding": [{"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "I48.91", "display": "Unspecified atrial fibrillation"}],
+          "text": "Atrial fibrillation"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "onsetDateTime": "2020-11-10",
+        "recordedDate": "2020-11-10"
+      },
+      "request": {"method": "PUT", "url": "Condition/cond-afib"}
+    },
+    {
+      "fullUrl": "Condition/cond-ckd",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-ckd",
+        "clinicalStatus": {
+          "coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active"}]
+        },
+        "code": {
+          "coding": [{"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "N18.4", "display": "Chronic kidney disease, stage 4 (severe)"}],
+          "text": "Chronic kidney disease, stage 4"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "onsetDateTime": "2024-12-05",
+        "recordedDate": "2024-12-05"
+      },
+      "request": {"method": "PUT", "url": "Condition/cond-ckd"}
+    },
+    {
+      "fullUrl": "MedicationRequest/med-metformin",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-metformin",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [{"system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "860975", "display": "Metformin hydrochloride 1000 MG Oral Tablet"}],
+          "text": "Metformin 1000mg BID"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "authoredOn": "2023-03-15",
+        "requester": {"display": "Dr. James Liu (PCP)"},
+        "dosageInstruction": [{"text": "1000mg by mouth twice daily with meals"}]
+      },
+      "request": {"method": "PUT", "url": "MedicationRequest/med-metformin"}
+    },
+    {
+      "fullUrl": "MedicationRequest/med-warfarin",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-warfarin",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [{"system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "855332", "display": "Warfarin Sodium 5 MG Oral Tablet"}],
+          "text": "Warfarin 5mg daily"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "authoredOn": "2020-11-15",
+        "requester": {"display": "Dr. Sarah Park (Cardiology)"},
+        "dosageInstruction": [{"text": "5mg by mouth once daily, dose adjusted per INR"}]
+      },
+      "request": {"method": "PUT", "url": "MedicationRequest/med-warfarin"}
+    },
+    {
+      "fullUrl": "MedicationRequest/med-lisinopril",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-lisinopril",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [{"system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "314076", "display": "Lisinopril 20 MG Oral Tablet"}],
+          "text": "Lisinopril 20mg daily"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "authoredOn": "2016-01-10",
+        "requester": {"display": "Dr. James Liu (PCP)"},
+        "dosageInstruction": [{"text": "20mg by mouth once daily"}]
+      },
+      "request": {"method": "PUT", "url": "MedicationRequest/med-lisinopril"}
+    },
+    {
+      "fullUrl": "MedicationRequest/med-ibuprofen",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-ibuprofen",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [{"system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "197806", "display": "Ibuprofen 400 MG Oral Tablet"}],
+          "text": "Ibuprofen 400mg PRN"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "authoredOn": "2026-01-20",
+        "requester": {"display": "Dr. Urgent Care Provider"},
+        "dosageInstruction": [{"text": "400mg by mouth as needed for pain, not more than 3x daily"}]
+      },
+      "request": {"method": "PUT", "url": "MedicationRequest/med-ibuprofen"}
+    },
+    {
+      "fullUrl": "Observation/obs-egfr-1",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-egfr-1",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "33914-3", "display": "Glomerular filtration rate/1.73 sq M.predicted [Volume Rate/Area] in Serum, Plasma or Blood by Creatinine-based formula (CKD-EPI)"}],
+          "text": "eGFR"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2025-02-15",
+        "valueQuantity": {"value": 52, "unit": "mL/min/1.73m2", "system": "http://unitsofmeasure.org", "code": "mL/min/{1.73_m2}"},
+        "referenceRange": [{"low": {"value": 60}, "text": "Normal: >= 60 mL/min/1.73m2"}],
+        "interpretation": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation", "code": "L", "display": "Low"}]}]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-egfr-1"}
+    },
+    {
+      "fullUrl": "Observation/obs-egfr-2",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-egfr-2",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "33914-3", "display": "eGFR"}],
+          "text": "eGFR"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2025-08-10",
+        "valueQuantity": {"value": 44, "unit": "mL/min/1.73m2", "system": "http://unitsofmeasure.org", "code": "mL/min/{1.73_m2}"},
+        "referenceRange": [{"low": {"value": 60}, "text": "Normal: >= 60 mL/min/1.73m2"}],
+        "interpretation": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation", "code": "L", "display": "Low"}]}]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-egfr-2"}
+    },
+    {
+      "fullUrl": "Observation/obs-egfr-3",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-egfr-3",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "33914-3", "display": "eGFR"}],
+          "text": "eGFR"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2025-12-05",
+        "valueQuantity": {"value": 31, "unit": "mL/min/1.73m2", "system": "http://unitsofmeasure.org", "code": "mL/min/{1.73_m2}"},
+        "referenceRange": [{"low": {"value": 60}, "text": "Normal: >= 60 mL/min/1.73m2"}],
+        "interpretation": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation", "code": "LL", "display": "Critical low"}]}]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-egfr-3"}
+    },
+    {
+      "fullUrl": "Observation/obs-egfr-4",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-egfr-4",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "33914-3", "display": "eGFR"}],
+          "text": "eGFR"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2026-04-20",
+        "valueQuantity": {"value": 27, "unit": "mL/min/1.73m2", "system": "http://unitsofmeasure.org", "code": "mL/min/{1.73_m2}"},
+        "referenceRange": [{"low": {"value": 60}, "text": "Normal: >= 60 mL/min/1.73m2"}],
+        "interpretation": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation", "code": "LL", "display": "Critical low"}]}]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-egfr-4"}
+    },
+    {
+      "fullUrl": "Observation/obs-a1c-1",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-a1c-1",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "4548-4", "display": "Hemoglobin A1c/Hemoglobin.total in Blood"}],
+          "text": "HbA1c"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2024-10-08",
+        "valueQuantity": {"value": 7.1, "unit": "%", "system": "http://unitsofmeasure.org", "code": "%"},
+        "referenceRange": [{"high": {"value": 5.7}, "text": "Normal: < 5.7%"}],
+        "interpretation": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation", "code": "H", "display": "High"}]}]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-a1c-1"}
+    },
+    {
+      "fullUrl": "Observation/obs-a1c-2",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-a1c-2",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "4548-4", "display": "Hemoglobin A1c/Hemoglobin.total in Blood"}],
+          "text": "HbA1c"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2025-06-12",
+        "valueQuantity": {"value": 7.6, "unit": "%", "system": "http://unitsofmeasure.org", "code": "%"},
+        "referenceRange": [{"high": {"value": 5.7}, "text": "Normal: < 5.7%"}],
+        "interpretation": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation", "code": "H", "display": "High"}]}]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-a1c-2"}
+    },
+    {
+      "fullUrl": "Observation/obs-a1c-3",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-a1c-3",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "4548-4", "display": "Hemoglobin A1c/Hemoglobin.total in Blood"}],
+          "text": "HbA1c"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2026-02-20",
+        "valueQuantity": {"value": 8.2, "unit": "%", "system": "http://unitsofmeasure.org", "code": "%"},
+        "referenceRange": [{"high": {"value": 5.7}, "text": "Normal: < 5.7%"}],
+        "interpretation": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation", "code": "H", "display": "High"}]}]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-a1c-3"}
+    },
+    {
+      "fullUrl": "Observation/obs-inr-1",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-inr-1",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "6301-6", "display": "INR in Platelet poor plasma by Coagulation assay"}],
+          "text": "INR"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2025-11-20",
+        "valueQuantity": {"value": 2.1, "unit": "ratio", "system": "http://unitsofmeasure.org", "code": "{INR}"},
+        "referenceRange": [{"low": {"value": 2.0}, "high": {"value": 3.0}, "text": "Therapeutic range (AFib): 2.0-3.0"}]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-inr-1"}
+    },
+    {
+      "fullUrl": "Observation/obs-inr-2",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-inr-2",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "6301-6", "display": "INR in Platelet poor plasma by Coagulation assay"}],
+          "text": "INR"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2026-02-14",
+        "valueQuantity": {"value": 2.4, "unit": "ratio", "system": "http://unitsofmeasure.org", "code": "{INR}"},
+        "referenceRange": [{"low": {"value": 2.0}, "high": {"value": 3.0}, "text": "Therapeutic range (AFib): 2.0-3.0"}]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-inr-2"}
+    },
+    {
+      "fullUrl": "Observation/obs-k-1",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-k-1",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "2823-3", "display": "Potassium [Moles/volume] in Serum or Plasma"}],
+          "text": "Potassium"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2025-02-15",
+        "valueQuantity": {"value": 4.2, "unit": "mmol/L", "system": "http://unitsofmeasure.org", "code": "mmol/L"},
+        "referenceRange": [{"low": {"value": 3.5}, "high": {"value": 5.0}, "text": "Normal: 3.5-5.0 mmol/L"}]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-k-1"}
+    },
+    {
+      "fullUrl": "Observation/obs-k-2",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-k-2",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "2823-3", "display": "Potassium [Moles/volume] in Serum or Plasma"}],
+          "text": "Potassium"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2025-08-10",
+        "valueQuantity": {"value": 4.8, "unit": "mmol/L", "system": "http://unitsofmeasure.org", "code": "mmol/L"},
+        "referenceRange": [{"low": {"value": 3.5}, "high": {"value": 5.0}, "text": "Normal: 3.5-5.0 mmol/L"}]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-k-2"}
+    },
+    {
+      "fullUrl": "Observation/obs-k-3",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-k-3",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "2823-3", "display": "Potassium [Moles/volume] in Serum or Plasma"}],
+          "text": "Potassium"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2026-04-20",
+        "valueQuantity": {"value": 5.3, "unit": "mmol/L", "system": "http://unitsofmeasure.org", "code": "mmol/L"},
+        "referenceRange": [{"low": {"value": 3.5}, "high": {"value": 5.0}, "text": "Normal: 3.5-5.0 mmol/L"}],
+        "interpretation": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation", "code": "H", "display": "High"}]}]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-k-3"}
+    },
+    {
+      "fullUrl": "Observation/obs-bp-1",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-bp-1",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "vital-signs"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "55284-4", "display": "Blood pressure systolic and diastolic"}],
+          "text": "Blood Pressure"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2025-02-15",
+        "component": [
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "8480-6", "display": "Systolic blood pressure"}]},
+            "valueQuantity": {"value": 138, "unit": "mmHg", "system": "http://unitsofmeasure.org", "code": "mm[Hg]"}
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "8462-4", "display": "Diastolic blood pressure"}]},
+            "valueQuantity": {"value": 82, "unit": "mmHg", "system": "http://unitsofmeasure.org", "code": "mm[Hg]"}
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-bp-1"}
+    },
+    {
+      "fullUrl": "Observation/obs-bp-2",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-bp-2",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "vital-signs"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "55284-4", "display": "Blood pressure systolic and diastolic"}],
+          "text": "Blood Pressure"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2025-08-10",
+        "component": [
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "8480-6"}]},
+            "valueQuantity": {"value": 142, "unit": "mmHg", "system": "http://unitsofmeasure.org", "code": "mm[Hg]"}
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "8462-4"}]},
+            "valueQuantity": {"value": 88, "unit": "mmHg", "system": "http://unitsofmeasure.org", "code": "mm[Hg]"}
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-bp-2"}
+    },
+    {
+      "fullUrl": "Observation/obs-bp-3",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-bp-3",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "vital-signs"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "55284-4", "display": "Blood pressure systolic and diastolic"}],
+          "text": "Blood Pressure"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2025-12-05",
+        "component": [
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "8480-6"}]},
+            "valueQuantity": {"value": 148, "unit": "mmHg", "system": "http://unitsofmeasure.org", "code": "mm[Hg]"}
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "8462-4"}]},
+            "valueQuantity": {"value": 90, "unit": "mmHg", "system": "http://unitsofmeasure.org", "code": "mm[Hg]"}
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-bp-3"}
+    },
+    {
+      "fullUrl": "Observation/obs-bp-4",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-bp-4",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "vital-signs"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "55284-4", "display": "Blood pressure systolic and diastolic"}],
+          "text": "Blood Pressure"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2026-04-20",
+        "component": [
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "8480-6"}]},
+            "valueQuantity": {"value": 155, "unit": "mmHg", "system": "http://unitsofmeasure.org", "code": "mm[Hg]"}
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "8462-4"}]},
+            "valueQuantity": {"value": 94, "unit": "mmHg", "system": "http://unitsofmeasure.org", "code": "mm[Hg]"}
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Observation/obs-bp-4"}
+    },
+    {
+      "fullUrl": "DiagnosticReport/dr-fobt",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "dr-fobt",
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v2-0074", "code": "LAB"}]}],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "2335-8", "display": "Hemoglobin.gastrointestinal [Presence] in Stool"}],
+          "text": "Fecal Occult Blood Test"
+        },
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "effectiveDateTime": "2025-11-15",
+        "issued": "2025-11-15T14:30:00Z",
+        "resultsInterpreter": [{"display": "Dr. James Liu (PCP)"}],
+        "conclusion": "POSITIVE for occult blood. Colorectal cancer screening follow-up recommended within 60 days.",
+        "conclusionCode": [
+          {"coding": [{"system": "http://snomed.info/sct", "code": "10828004", "display": "Positive (finding)"}]}
+        ]
+      },
+      "request": {"method": "PUT", "url": "DiagnosticReport/dr-fobt"}
+    },
+    {
+      "fullUrl": "AllergyIntolerance/allergy-pcn",
+      "resource": {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-pcn",
+        "clinicalStatus": {
+          "coding": [{"system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical", "code": "active"}]
+        },
+        "type": "allergy",
+        "code": {
+          "coding": [{"system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "7980", "display": "Penicillin"}],
+          "text": "Penicillin"
+        },
+        "patient": {"reference": "Patient/patient-mc-071"},
+        "reaction": [
+          {
+            "manifestation": [{"coding": [{"system": "http://snomed.info/sct", "code": "271807003", "display": "Skin rash (finding)"}], "text": "Rash"}],
+            "severity": "mild"
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "AllergyIntolerance/allergy-pcn"}
+    },
+    {
+      "fullUrl": "Encounter/enc-1",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-1",
+        "status": "finished",
+        "class": {"system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB", "display": "ambulatory"},
+        "type": [{"coding": [{"system": "http://snomed.info/sct", "code": "185349003", "display": "Encounter for check up"}], "text": "Office Visit"}],
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "participant": [{"individual": {"display": "Dr. James Liu (PCP)"}}],
+        "period": {"start": "2026-04-20", "end": "2026-04-20"},
+        "reasonCode": [{"text": "Routine follow-up — diabetes, hypertension, CKD monitoring"}],
+        "note": [{"text": "71yo F here for routine follow-up. Diabetes — continue current management. HTN — stable. CKD — monitoring. Refill medications. Follow up 3 months."}]
+      },
+      "request": {"method": "PUT", "url": "Encounter/enc-1"}
+    },
+    {
+      "fullUrl": "Encounter/enc-2",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-2",
+        "status": "finished",
+        "class": {"system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB", "display": "ambulatory"},
+        "type": [{"coding": [{"system": "http://snomed.info/sct", "code": "11429006", "display": "Consultation"}], "text": "Urgent Care Visit"}],
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "participant": [{"individual": {"display": "Dr. Urgent Care Provider"}}],
+        "period": {"start": "2026-01-20", "end": "2026-01-20"},
+        "reasonCode": [{"text": "Left knee pain x 2 weeks, no trauma"}],
+        "note": [{"text": "Patient presents with left knee pain x 2 weeks. No trauma. Mild swelling. Prescribed ibuprofen 400mg PRN. Follow up with PCP if not improving."}]
+      },
+      "request": {"method": "PUT", "url": "Encounter/enc-2"}
+    },
+    {
+      "fullUrl": "Encounter/enc-3",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-3",
+        "status": "finished",
+        "class": {"system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB", "display": "ambulatory"},
+        "type": [{"coding": [{"system": "http://snomed.info/sct", "code": "185349003", "display": "Encounter for check up"}], "text": "Office Visit"}],
+        "subject": {"reference": "Patient/patient-mc-071"},
+        "participant": [{"individual": {"display": "Dr. James Liu (PCP)"}}],
+        "period": {"start": "2025-12-05", "end": "2025-12-05"},
+        "reasonCode": [{"text": "Routine follow-up"}],
+        "note": [{"text": "Routine follow-up. Chronic conditions stable. Labs reviewed. Continue current management."}]
+      },
+      "request": {"method": "PUT", "url": "Encounter/enc-3"}
+    }
+  ]
+}

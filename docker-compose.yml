@@ -17,10 +17,12 @@
 #   Copy .env.example to .env and set GOOGLE_API_KEY before running.
 #   The .env file is loaded automatically by each service.
 #
-# Agents and their ports (same as the bare-Python setup):
-#   healthcare  → http://localhost:8001
-#   general     → http://localhost:8002
-#   orchestrator → http://localhost:8003
+# Agents and their ports:
+#   safesignal      → http://localhost:8004  (SafeSignal A2A Agent — The Superhero)
+#   safesignal-mcp  → http://localhost:8005  (SafeSignal MCP Server — The Superpower)
+#   healthcare      → http://localhost:8001  (original base agent)
+#   general         → http://localhost:8002  (original base agent)
+#   orchestrator    → http://localhost:8003  (original orchestrator)
 
 # Shared configuration — all services inherit these settings.
 x-agent-defaults: &agent-defaults
@@ -30,6 +32,31 @@ x-agent-defaults: &agent-defaults
 
 services:
 
+  # ── SafeSignal A2A Agent (The Superhero) — port 8004 ─────────────────────────
+  # Primary SafeSignal agent: pre-visit risk briefing, medication safety,
+  # deterioration detection, and follow-up gap analysis.
+  # Ask: "What should I know before seeing this patient today?"
+  safesignal:
+    <<: *agent-defaults
+    environment:
+      AGENT_MODULE: safesignal.app:a2a_app
+      PORT: "8004"
+    ports:
+      - "8004:8004"
+
+  # ── SafeSignal MCP Server (The Superpower) — port 8005 ───────────────────────
+  # Exposes 4 reusable clinical reasoning tools via MCP/SSE.
+  # Any agent on Prompt Opinion can call these tools directly.
+  # SSE endpoint: http://localhost:8005/sse
+  safesignal-mcp:
+    <<: *agent-defaults
+    environment:
+      MCP_PORT: "8005"
+    ports:
+      - "8005:8005"
+    command: python -m safesignal_mcp.app
+
+  # ── Original agents (kept for reference) ─────────────────────────────────────
   healthcare:
     <<: *agent-defaults
     environment:
