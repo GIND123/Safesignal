@@ -33,12 +33,11 @@ COPY . .
 # Cloud Run automatically sets PORT to 8080; override for local Docker testing.
 ENV PORT=8080
 
-# Which A2A agent to serve.  Set via --set-env-vars at deploy time.
+# Which SafeSignal module to serve.  Set via --set-env-vars at deploy time.
 # Valid values:
-#   healthcare_agent.app:a2a_app   (authenticated, FHIR-connected — port 8001 locally)
-#   general_agent.app:a2a_app      (public, no key required — port 8002 locally)
-#   orchestrator.app:a2a_app       (authenticated, delegates to both — port 8003 locally)
-ENV AGENT_MODULE=healthcare_agent.app:a2a_app
+#   safesignal.app:a2a_app        (A2A agent — port 8004 locally)
+#   safesignal_mcp.app:sse_app    (MCP server — port 8005 locally)
+ENV AGENT_MODULE=safesignal.app:a2a_app
 
 # exec replaces the shell so uvicorn is PID 1 and receives SIGTERM from Cloud Run.
 CMD ["sh", "-c", "exec uvicorn ${AGENT_MODULE} --host 0.0.0.0 --port ${PORT}"]

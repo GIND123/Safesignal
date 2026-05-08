@@ -1,3 +1,2 @@
-healthcare:   uvicorn healthcare_agent.app:a2a_app   --host 0.0.0.0 --port 8001 --log-level info
-general:      uvicorn general_agent.app:a2a_app      --host 0.0.0.0 --port 8002 --log-level info
-orchestrator: uvicorn orchestrator.app:a2a_app        --host 0.0.0.0 --port 8003 --log-level info
+safesignal: uvicorn safesignal.app:a2a_app       --host 0.0.0.0 --port 8004 --log-level info
+mcp:        uvicorn safesignal_mcp.app:sse_app  --host 0.0.0.0 --port 8005 --log-level info

@@ -78,7 +78,7 @@ def _call_llm(system_prompt: str, user_content: str) -> str:
                 {"role": "user",   "content": user_content},
             ],
             temperature=0.1,  # low temperature for consistent clinical output
-            max_tokens=4096,
+            max_tokens=8192,
         )
         return response.choices[0].message.content or ""
     except Exception as exc:
