@@ -1,12 +1,12 @@
-﻿"""
+"""
 SafeSignal Full System Test
 
 Tests every layer of the SafeSignal stack:
-  1. RxNorm API â€” ingredient lookup for Margaret Chen's medications
-  2. FDA OpenFDA API â€” drug label warnings for each medication
-  3. NLM Drug Interaction API â€” pairwise interactions between active meds
-  4. Knowledge enrichment layer â€” end-to-end enrichment output
-  5. FHIR data retrieval â€” Margaret Chen patient on HAPI FHIR sandbox
+  1. RxNorm API  -- ingredient lookup for Margaret Chen's medications
+  2. FDA OpenFDA API -- drug label warnings for each medication
+  3. FDA Label Cross-Reference -- pairwise interactions from FDA labels
+  4. Knowledge enrichment layer -- end-to-end enrichment output
+  5. FHIR data retrieval -- Margaret Chen patient on HAPI FHIR sandbox
   6. MCP tool: check_medication_safety (full enriched analysis with LLM)
   7. MCP tool: detect_silent_deterioration (longitudinal trend analysis)
   8. MCP tool: find_lost_followups (follow-up gap detection)
@@ -24,8 +24,6 @@ Usage:
 
     # Run only one specific MCP tool:
     python scripts/test_safesignal_full.py --tool medication_safety
-
-After a successful run, the complete risk briefing will be printed to stdout.
 """
 import argparse
 import asyncio
@@ -56,25 +54,19 @@ MARGARET_CHEN_MEDS = [
 ]
 
 
-# â”€â”€ Colour helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-def _green(s: str)  -> str: return f"\033[92m{s}\033[0m"
-def _red(s: str)    -> str: return f"\033[91m{s}\033[0m"
-def _yellow(s: str) -> str: return f"\033[93m{s}\033[0m"
-def _bold(s: str)   -> str: return f"\033[1m{s}\033[0m"
-def _cyan(s: str)   -> str: return f"\033[96m{s}\033[0m"
+# -- Print helpers -----------------------------------------------------------
 
 def _header(title: str) -> None:
-    print("\n" + "â”" * 60)
-    print(_bold(_cyan(f"  {title}")))
-    print("â”" * 60)
+    print("\n" + "-" * 60)
+    print(f"  {title}")
+    print("-" * 60)
 
-def _ok(msg: str)   -> None: print(f"  {_green('âœ“')} {msg}")
-def _fail(msg: str) -> None: print(f"  {_red('âœ—')} {msg}")
-def _info(msg: str) -> None: print(f"  {_yellow('â†’')} {msg}")
+def _ok(msg: str)   -> None: print(f"  [PASS] {msg}")
+def _fail(msg: str) -> None: print(f"  [FAIL] {msg}")
+def _info(msg: str) -> None: print(f"  [INFO] {msg}")
 
 
-# â”€â”€ Phase 1: Knowledge enrichment unit tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# -- Phase 1: Knowledge enrichment unit tests --------------------------------
 
 def test_rxnorm():
     _header("Phase 1a: RxNorm RxCUI Lookup")
@@ -92,13 +84,13 @@ def test_rxnorm():
     for name, should_find in test_cases:
         rxcui = lookup_rxcui(name)
         if should_find and rxcui:
-            _ok(f"{name!r} â†’ RxCUI {rxcui}")
+            _ok(f"{name!r} -> RxCUI {rxcui}")
             passed += 1
         elif not should_find and not rxcui:
-            _ok(f"{name!r} â†’ correctly not found")
+            _ok(f"{name!r} -> correctly not found")
             passed += 1
         else:
-            _fail(f"{name!r} â†’ expected {'found' if should_find else 'not found'}, got {rxcui!r}")
+            _fail(f"{name!r} -> expected {'found' if should_find else 'not found'}, got {rxcui!r}")
 
     print(f"\n  Result: {passed}/{len(test_cases)} passed")
     return passed == len(test_cases)
@@ -126,8 +118,8 @@ def test_fda_labels():
                 parts.append("drug_interactions")
             _ok(f"{ingredient!r}: found [{', '.join(parts) or 'label data'}]")
             if label.get("boxed_warning"):
-                preview = label["boxed_warning"][:120].replace("\n", " ")
-                _info(f"  Boxed warning preview: {preview}â€¦")
+                preview = label["boxed_warning"][:120].replace("\n", " ").encode("ascii", errors="replace").decode("ascii")
+                _info(f"  Boxed warning preview: {preview}...")
         else:
             _fail(f"{ingredient!r}: no label data returned (check FDA_API_KEY env var)")
 
@@ -136,30 +128,26 @@ def test_fda_labels():
 
 
 def test_nlm_interactions():
-    _header("Phase 1c: NLM Drug-Drug Interaction Lookup")
-    from safesignal.tools.knowledge_enrichment import lookup_rxcui, lookup_interactions
+    _header("Phase 1c: FDA Label Cross-Reference Interaction Scan")
+    _info("NLM /interaction/ endpoint is inactive; using FDA label cross-reference instead.")
+    from safesignal.tools.knowledge_enrichment import enrich_medications
 
-    # Use known RxCUIs for warfarin and ibuprofen
-    warfarin_rxcui  = lookup_rxcui("warfarin")
-    ibuprofen_rxcui = lookup_rxcui("ibuprofen")
-
-    if not warfarin_rxcui or not ibuprofen_rxcui:
-        _fail("Could not get RxCUIs â€” skipping interaction test")
-        return False
-
-    rxcuis = [warfarin_rxcui, ibuprofen_rxcui]
-    _info(f"Looking up interactions for rxcuis: {rxcuis}")
-
-    interactions = lookup_interactions(rxcuis)
+    meds = [
+        {"display": "Warfarin 5mg daily",  "code": "855332", "resource_id": "MedicationRequest/203"},
+        {"display": "Ibuprofen 400mg PRN", "code": "197806", "resource_id": "MedicationRequest/205"},
+    ]
+    result       = enrich_medications(meds)
+    interactions = result["drug_interactions"]
 
     if interactions:
-        _ok(f"Found {len(interactions)} interaction(s)")
+        _ok(f"Found {len(interactions)} FDA-label-cited interaction(s)")
         for ix in interactions[:3]:
-            _info(f"  {ix['drug1']} â†” {ix['drug2']} (severity: {ix['severity']})")
-            _info(f"  {ix['description'][:100]}â€¦")
+            _info(f"  {ix['drug1']} <-> {ix['drug2']} (severity: {ix['severity']})")
+            desc = ix["description"][:100].encode("ascii", errors="replace").decode("ascii")
+            _info(f"  {desc}...")
         return True
     else:
-        _fail("No interactions found â€” API may be rate-limited or drugs unrecognised")
+        _fail("No FDA label interactions found for Warfarin+Ibuprofen pair")
         return False
 
 
@@ -167,7 +155,6 @@ def test_enrichment_pipeline():
     _header("Phase 1d: Full Enrichment Pipeline (enrich_medications)")
     from safesignal.tools.knowledge_enrichment import enrich_medications
 
-    # Use simplified FHIR-format medication dicts
     meds = [
         {"display": "Metformin 1000mg BID",  "code": "860975", "resource_id": "MedicationRequest/201"},
         {"display": "Warfarin 5mg daily",     "code": "855332", "resource_id": "MedicationRequest/203"},
@@ -196,15 +183,16 @@ def test_enrichment_pipeline():
             fda_fields_found += 1
 
     _ok(f"Medications with FDA data: {fda_fields_found}/{len(enriched)}")
-    _ok(f"NLM interactions detected: {len(interactions)}")
+    _ok(f"FDA label interactions detected: {len(interactions)}")
 
     for ix in interactions[:5]:
-        _info(f"  {ix['drug1']} â†” {ix['drug2']} â€” {ix['severity']}: {ix['description'][:80]}â€¦")
+        desc = ix["description"][:80].encode("ascii", errors="replace").decode("ascii")
+        _info(f"  {ix['drug1']} <-> {ix['drug2']} -- {ix['severity']}: {desc}...")
 
     return fda_fields_found > 0
 
 
-# â”€â”€ Phase 2: FHIR data tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# -- Phase 2: FHIR data tests ------------------------------------------------
 
 def load_patient(fhir_url: str) -> bool:
     _header("Phase 2a: Load Margaret Chen FHIR Bundle")
@@ -269,21 +257,20 @@ def test_fhir_data_retrieval(fhir_url: str, token: str) -> bool:
         return False
 
     checks = [
-        ("Patient",           bool(context["patient"])),
-        ("Conditions",        len(context["conditions"]) > 0),
-        ("Medications",       len(context["medications"]) > 0),
-        ("Observation series",len(context["observation_series"]) > 0),
-        ("Diagnostic reports",len(context["diagnostic_reports"]) >= 0),
-        ("Encounters",        len(context["encounters"]) >= 0),
+        ("Patient",            bool(context["patient"])),
+        ("Conditions",         len(context["conditions"]) > 0),
+        ("Medications",        len(context["medications"]) > 0),
+        ("Observation series", len(context["observation_series"]) > 0),
+        ("Diagnostic reports", len(context["diagnostic_reports"]) >= 0),
+        ("Encounters",         len(context["encounters"]) >= 0),
     ]
 
     all_ok = True
     for name, ok in checks:
         if ok:
-            count = len(context.get(name.lower().replace(" ", "_"), []))
             _ok(f"{name}: retrieved")
         else:
-            _fail(f"{name}: empty â€” check patient data was loaded")
+            _fail(f"{name}: empty -- check patient data was loaded")
             all_ok = False
 
     p = context["patient"]
@@ -295,11 +282,11 @@ def test_fhir_data_retrieval(fhir_url: str, token: str) -> bool:
     return all_ok
 
 
-# â”€â”€ Phase 3: MCP tool tests (with LLM) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# -- Phase 3: MCP tool tests (with LLM) -------------------------------------
 
 def _run_mcp_tool(tool_fn, tool_name: str, fhir_url: str, token: str, **kwargs) -> str | None:
-    _header(f"Phase 3: MCP Tool â€” {tool_name}")
-    _info(f"Calling {tool_name} for patient {PATIENT_ID}â€¦")
+    _header(f"Phase 3: MCP Tool -- {tool_name}")
+    _info(f"Calling {tool_name} for patient {PATIENT_ID}...")
 
     t0 = time.time()
     try:
@@ -310,7 +297,7 @@ def _run_mcp_tool(tool_fn, tool_name: str, fhir_url: str, token: str, **kwargs) 
             **kwargs,
         ))
         elapsed = time.time() - t0
-        _ok(f"Completed in {elapsed:.1f}s â€” {len(result)} characters returned")
+        _ok(f"Completed in {elapsed:.1f}s -- {len(result)} characters returned")
         return result
     except Exception as exc:
         _fail(f"{tool_name} failed: {exc}")
@@ -321,12 +308,12 @@ def test_medication_safety_mcp(fhir_url: str, token: str) -> bool:
     from safesignal_mcp.server import check_medication_safety
     result = _run_mcp_tool(check_medication_safety, "check_medication_safety", fhir_url, token)
     if result:
-        # Check for expected findings in Margaret Chen case
         keywords = ["metformin", "egfr", "ibuprofen", "warfarin"]
         found_kw = [kw for kw in keywords if kw.lower() in result.lower()]
         _ok(f"Expected clinical keywords found: {found_kw}")
-        print("\n" + "â”€" * 60)
-        print(result[:2000] + ("\nâ€¦[truncated]" if len(result) > 2000 else ""))
+        preview = result[:2000].encode("ascii", errors="replace").decode("ascii")
+        print("\n" + "-" * 60)
+        print(preview + ("\n...[truncated]" if len(result) > 2000 else ""))
         return len(found_kw) >= 2
     return False
 
@@ -338,8 +325,9 @@ def test_deterioration_mcp(fhir_url: str, token: str) -> bool:
         keywords = ["egfr", "decline", "a1c", "hba1c", "blood pressure"]
         found_kw = [kw for kw in keywords if kw.lower() in result.lower()]
         _ok(f"Expected trend keywords found: {found_kw}")
-        print("\n" + "â”€" * 60)
-        print(result[:2000] + ("\nâ€¦[truncated]" if len(result) > 2000 else ""))
+        preview = result[:2000].encode("ascii", errors="replace").decode("ascii")
+        print("\n" + "-" * 60)
+        print(preview + ("\n...[truncated]" if len(result) > 2000 else ""))
         return len(found_kw) >= 2
     return False
 
@@ -351,9 +339,10 @@ def test_lost_followups_mcp(fhir_url: str, token: str) -> bool:
         keywords = ["fobt", "fecal", "colonoscopy", "follow"]
         found_kw = [kw for kw in keywords if kw.lower() in result.lower()]
         _ok(f"Expected follow-up keywords found: {found_kw}")
-        print("\n" + "â”€" * 60)
-        print(result[:2000] + ("\nâ€¦[truncated]" if len(result) > 2000 else ""))
-        return True  # lenient check â€” HAPI may not have all DR resources
+        preview = result[:2000].encode("ascii", errors="replace").decode("ascii")
+        print("\n" + "-" * 60)
+        print(preview + ("\n...[truncated]" if len(result) > 2000 else ""))
+        return True  # lenient -- HAPI may not have all DR resources
     return False
 
 
@@ -364,7 +353,7 @@ def test_full_briefing_mcp(fhir_url: str, token: str) -> bool:
         "generate_risk_briefing",
         fhir_url,
         token,
-        context="Routine follow-up â€” diabetes, CKD, atrial fibrillation",
+        context="Routine follow-up -- diabetes, CKD, atrial fibrillation",
     )
     if result:
         urgency_found = "URGENT" in result or "urgent" in result.lower()
@@ -379,12 +368,29 @@ def test_full_briefing_mcp(fhir_url: str, token: str) -> bool:
         else:             _info("FDA evidence not explicitly cited (may be in context)")
 
         _header("FULL RISK BRIEFING OUTPUT")
-        print(result)
+        print(result.encode("ascii", errors="replace").decode("ascii"))
         return urgency_found and compliance
     return False
 
 
-# â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# -- Main --------------------------------------------------------------------
+
+def _print_summary(results: dict[str, bool]) -> None:
+    _header("Test Summary")
+    passed = sum(1 for v in results.values() if v)
+    total  = len(results)
+
+    for name, ok in results.items():
+        status = "PASS" if ok else "FAIL"
+        print(f"  [{status}] {name}")
+
+    print()
+    if passed == total:
+        print(f"  All {total} tests passed.")
+    else:
+        print(f"  {passed}/{total} tests passed.")
+    print()
+
 
 def main():
     parser = argparse.ArgumentParser(description="SafeSignal full system test")
@@ -406,43 +412,41 @@ def main():
 
     print("\nSafeSignal Full System Test")
     print(f"FHIR: {fhir_url}  |  Patient: {PATIENT_ID}  |  Date: {__import__('datetime').date.today()}")
-    print(f"FDA API key: {'set âœ“' if os.getenv('FDA_API_KEY') else 'not set (will use anon rate limit)'}")
-    print(f"Google API key: {'set âœ“' if os.getenv('GOOGLE_API_KEY') else 'NOT SET â€” LLM tests will fail!'}")
+    print(f"FDA API key: {'set' if os.getenv('FDA_API_KEY') else 'not set (anon rate limit)'}")
+    print(f"Google API key: {'set' if os.getenv('GOOGLE_API_KEY') else 'NOT SET -- LLM tests will fail!'}")
 
     results: dict[str, bool] = {}
 
-    # â”€â”€ Phase 1: Knowledge enrichment (no FHIR needed) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # -- Phase 1: Knowledge enrichment (no FHIR needed) ----------------------
     if not args.tool:
-        results["RxNorm lookup"]         = test_rxnorm()
-        results["FDA label lookup"]       = test_fda_labels()
-        results["NLM interactions"]       = test_nlm_interactions()
-        results["Enrichment pipeline"]    = test_enrichment_pipeline()
+        results["RxNorm lookup"]          = test_rxnorm()
+        results["FDA label lookup"]        = test_fda_labels()
+        results["FDA cross-ref interact"]  = test_nlm_interactions()
+        results["Enrichment pipeline"]     = test_enrichment_pipeline()
 
     if args.enrichment_only:
         _print_summary(results)
         return
 
-    # â”€â”€ Phase 2: FHIR data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # -- Phase 2: FHIR data --------------------------------------------------
     if args.load:
         results["Patient load"]           = load_patient(fhir_url)
     if not args.tool:
         results["Patient verify"]         = verify_patient(fhir_url)
         results["FHIR data retrieval"]    = test_fhir_data_retrieval(fhir_url, token)
 
-    # Check patient is accessible before running LLM tools
     if not args.tool and not results.get("Patient verify", True):
-        _header("SKIPPING LLM TOOL TESTS â€” patient not found on FHIR server")
+        _header("SKIPPING LLM TOOL TESTS -- patient not found on FHIR server")
         _info("Run with --load to load the patient data first.")
         _print_summary(results)
         return
 
-    # Verify patient is accessible for individual tool tests
     if args.tool:
         if not verify_patient(fhir_url):
-            print(_red("\nPatient not found. Run with --load to load patient data."))
+            print("\nPatient not found. Run with --load to load patient data.")
             sys.exit(1)
 
-    # â”€â”€ Phase 3: MCP tool tests (LLM) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # -- Phase 3: MCP tool tests (LLM) ---------------------------------------
     tool_map = {
         "medication_safety": ("Medication Safety MCP",  test_medication_safety_mcp),
         "deterioration":     ("Deterioration MCP",       test_deterioration_mcp),
@@ -460,23 +464,5 @@ def main():
     _print_summary(results)
 
 
-def _print_summary(results: dict[str, bool]) -> None:
-    _header("Test Summary")
-    passed = sum(1 for v in results.values() if v)
-    total  = len(results)
-
-    for name, ok in results.items():
-        symbol = _green("PASS") if ok else _red("FAIL")
-        print(f"  [{symbol}] {name}")
-
-    print()
-    if passed == total:
-        print(_green(_bold(f"  All {total} tests passed.")))
-    else:
-        print(_yellow(_bold(f"  {passed}/{total} tests passed.")))
-    print()
-
-
 if __name__ == "__main__":
     main()
-
