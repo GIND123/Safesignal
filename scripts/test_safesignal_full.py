@@ -128,8 +128,8 @@ def test_fda_labels():
 
 
 def test_nlm_interactions():
-    _header("Phase 1c: FDA Label Cross-Reference Interaction Scan")
-    _info("NLM /interaction/ endpoint is inactive; using FDA label cross-reference instead.")
+    _header("Phase 1c: NLM + FDA Interaction Scan (enrich_medications)")
+    _info("Calls NLM RxNav ONCHigh per drug; FDA label cross-reference fills any gaps.")
     from safesignal.tools.knowledge_enrichment import enrich_medications
 
     meds = [

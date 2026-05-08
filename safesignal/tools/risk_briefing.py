@@ -106,13 +106,14 @@ def generate_risk_briefing(tool_context: ToolContext) -> dict:
         # Enriched medications with FDA label data
         "medications":          enriched_meds,
 
-        # NLM database-verified drug-drug interactions
+        # Drug-drug interactions (source field: "NLM RxNav (ONCHigh)" or "FDA Drug Label (OpenFDA)")
         "drug_interactions":    drug_interactions,
 
         "observation_series":   obs_series,
         "diagnostic_reports":   context["diagnostic_reports"],
         "encounters":           context["encounters"],
         "procedures":           context["procedures"],
+        "service_requests":     context.get("service_requests", []),
         "allergies":            context["allergies"],
 
         # ── Data summary for agent reasoning ────────────────────────────────
@@ -124,9 +125,10 @@ def generate_risk_briefing(tool_context: ToolContext) -> dict:
             "observation_series":   series_summary,
             "diagnostic_reports":   len(context["diagnostic_reports"]),
             "recent_encounters":    len(context["encounters"]),
+            "service_requests":     len(context.get("service_requests", [])),
             "known_allergies":      len(context["allergies"]),
             "key_conditions":       condition_summary,
-            "nlm_interactions_found": len(drug_interactions),
+            "interactions_found":   len(drug_interactions),
         },
 
         "enrichment_sources": enrichment_sources,
@@ -138,13 +140,15 @@ def generate_risk_briefing(tool_context: ToolContext) -> dict:
             "current labs, observation trends, conditions, and allergies. "
             "Medications include fda_boxed_warning, fda_contraindications, and fda_warnings "
             "fields from the FDA OpenFDA Drug Labels API — quote this language when citing risks. "
-            "The drug_interactions field contains NLM database-verified pairwise interactions — "
-            "cite these as: 'Per NLM Drug Interaction Database: [description] (severity: [level])'. "
+            "The drug_interactions field contains interaction evidence — each entry has a source field "
+            "(NLM RxNav ONCHigh or FDA Drug Label); cite using that source verbatim: "
+            "'Per [source]: [description] (severity: [level])'. "
             "(2) Silent deterioration patterns in the observation series — state each value "
             "change from first to most recent and the trajectory. "
             "(3) Lost-to-follow-up findings in the diagnostic reports and abnormal labs — "
-            "check whether any subsequent encounters or procedures constitute appropriate "
-            "follow-up within expected timeframes. "
+            "check whether any subsequent encounters, procedures, or service_requests (referrals) "
+            "constitute appropriate follow-up within expected timeframes. "
+            "If service_requests is empty, qualify any referral-gap claim accordingly. "
             "Organise findings by severity (URGENT first, then WARNING, then INFORMATIONAL). "
             "Cite the specific resource_id, date, and value for every finding. "
             "When FDA/NLM evidence is present, cite it alongside FHIR evidence. "

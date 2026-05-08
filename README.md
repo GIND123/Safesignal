@@ -7,7 +7,7 @@
 
 **SafeSignal detects hidden clinical risks in patient charts** by cross-referencing FHIR data across medications, labs, conditions, and time — catching dangerous drug-lab mismatches, lost-to-follow-up findings, and silent deterioration patterns that no individual visit note reveals.
 
-Built on [Prompt Opinion](https://promptopinion.ai) · Google ADK · A2A Protocol · MCP · FHIR R4 · FDA OpenFDA · RxNorm
+Built on [Prompt Opinion](https://promptopinion.ai) · Google ADK · A2A Protocol · MCP · FHIR R4 · FDA OpenFDA · NLM RxNav · RxNorm
 
 ---
 
@@ -27,19 +27,21 @@ Primary care physicians have 15-18 minutes per visit. There is no time to trace 
 
 ## What SafeSignal Finds
 
-Using a synthetic demo patient (Margaret Chen, 71F with T2DM, HTN, AFib, CKD Stage 4), SafeSignal detects **7 findings hiding in a chart a PCP would call "routine follow-up":**
+Using a synthetic demo patient (Margaret Chen, 71F with T2DM, HTN, AFib, CKD Stage 4), SafeSignal detects **9 findings hiding in a chart a PCP would call "routine follow-up":**
 
 | # | Finding | Severity | Type |
 |---|---|---|---|
-| 1 | Metformin with eGFR 27 — below discontinuation threshold (FDA label: eGFR <30) | URGENT | Medication-Lab Mismatch |
-| 2 | Ibuprofen + eGFR 27 + Warfarin — compound nephrotoxicity and bleeding risk (FDA + NLM) | URGENT | Compound Risk |
-| 3 | Positive FOBT 157 days ago, no colonoscopy or GI referral | WARNING | Lost Follow-Up |
-| 4 | eGFR declining 52→27 over 14 months, no nephrology referral | WARNING | Silent Deterioration |
-| 5 | A1c rising 7.1→8.2 over 18 months, no treatment change | WARNING | Silent Deterioration |
-| 6 | Lisinopril + potassium 5.3 + declining eGFR — hyperkalemia risk | WARNING | Medication-Lab Mismatch |
-| 7 | Warfarin INR overdue by ~7 weeks (FDA boxed warning: regular INR required) | INFO | Monitoring Gap |
+| 1 | Metformin with eGFR 27 — below discontinuation threshold (FDA label: eGFR <30 contraindicated) | URGENT | Medication-Lab Mismatch |
+| 2 | Lisinopril + potassium 5.3 + eGFR 27 — hyperkalemia risk with 38% renal decline | URGENT | Medication-Lab Mismatch |
+| 3 | Ibuprofen + Warfarin — bleeding interaction (FDA drug interactions label cited, severity: documented) | URGENT | Drug-Drug Interaction |
+| 4 | Ibuprofen with eGFR 27 — nephrotoxic NSAID in Stage 4 CKD, compound with Lisinopril | URGENT | Medication-Lab Mismatch |
+| 5 | Positive FOBT 157 days ago — no colonoscopy, no GI referral in ServiceRequests, Encounters, or Procedures | WARNING | Lost Follow-Up |
+| 6 | eGFR declining 52→27 over 14 months — no nephrology referral documented | WARNING | Silent Deterioration |
+| 7 | A1c rising 7.1→8.2 over 18 months despite Metformin | WARNING | Silent Deterioration |
+| 8 | Blood pressure rising 138/82→155/94 over 14 months despite Lisinopril | WARNING | Silent Deterioration |
+| 9 | Warfarin INR last measured 65 days ago (FDA boxed warning: regular monitoring required) | INFO | Monitoring Gap |
 
-**Validation: 9/9 automated checks pass. Briefing generated in ~29s, 6500+ characters, cites FDA label language for every medication finding.**
+**Validation: 10/10 automated checks pass. Briefing generated in ~35s, 7000+ characters, cites FDA label language and interaction source for every medication finding.**
 
 ---
 
@@ -64,31 +66,37 @@ Prompt Opinion Platform
 |  safesignal_mcp/           |      |  api.fda.gov/drug/label   |
 |  - check_medication_safety |      |  Boxed warnings,          |
 |  - detect_deterioration    |      |  contraindications,       |
-|  - find_lost_followups     |      |  warnings & precautions   |
+|  - find_lost_followups     |      |  drug interactions text   |
 |  - generate_risk_briefing  |      +---------------------------+
 +----------------------------+      +---------------------------+
-        |                           |  RxNorm / RxNav (NLM)    |
+        |                           |  NLM RxNav (ONCHigh)     |
         |  FHIR R4 queries          |  rxnav.nlm.nih.gov        |
-        v                           |  Drug identifier lookup   |
+        v                           |  Per-drug interaction DB  |
 +----------------------------+      +---------------------------+
-|  FHIR R4 Server            |
-|  8 resource types          |
-|  Patient, Condition,       |
-|  MedicationRequest,        |
-|  Observation, Encounter,   |
+|  FHIR R4 Server            |      +---------------------------+
+|  9 resource types          |      |  RxNorm / RxNav (NLM)    |
+|  Patient, Condition,       |      |  Drug ingredient ->       |
+|  MedicationRequest,        |      |  RxCUI identifier         |
+|  Observation, Encounter,   |      +---------------------------+
 |  Procedure, DiagReport,    |
+|  ServiceRequest,           |
 |  AllergyIntolerance        |
 +----------------------------+
 ```
 
-### Knowledge Enrichment Layer (new)
+### Knowledge Enrichment Layer
 
-Between FHIR data retrieval and LLM reasoning, SafeSignal enriches each medication with:
-- **FDA OpenFDA Drug Labels** — boxed warnings, contraindications, warnings & precautions, drug interactions text from the official regulatory label
-- **RxNorm/RxCUI** — standardised drug identifiers for each medication ingredient
-- **FDA Label Cross-Reference** — scans each drug's FDA label for co-prescribed drug names to find FDA-cited interaction evidence
+Between FHIR data retrieval and LLM reasoning, SafeSignal enriches each medication with data from three authoritative external sources:
 
-This means the LLM can cite: *"Per FDA Drug Label (OpenFDA) for Metformin: Severe renal impairment (eGFR below 30 mL/min/1.73 m2)"* — not just its training knowledge.
+1. **RxNorm/RxCUI** (`rxnav.nlm.nih.gov/REST/rxcui.json`) — normalises each medication ingredient to a standard NLM identifier, enabling database lookups.
+
+2. **FDA OpenFDA Drug Labels** (`api.fda.gov/drug/label.json`) — fetches boxed warnings, contraindications, warnings & precautions, and drug interactions text from the official FDA-approved regulatory label.
+
+3. **NLM RxNav Drug Interactions — ONCHigh** (`rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=...&sources=ONCHigh`) — per-drug interaction lookup from the National Library of Medicine's high-quality clinical subset. Filtered to co-prescribed pairs only. Where NLM finds no ONCHigh entry, the FDA drug label drug_interactions section is scanned as a fallback.
+
+Each `drug_interactions` entry carries an accurate `source` field — `"NLM RxNav (ONCHigh)"` or `"FDA Drug Label (OpenFDA) - drug interactions section"` — so the LLM cites the correct regulatory authority.
+
+This means the LLM can cite: *"Per FDA Drug Label (OpenFDA) - drug interactions section: ...take a blood thinning (anticoagulant)... (severity: documented)"* — not just its training knowledge.
 
 ---
 
@@ -105,19 +113,20 @@ This means the LLM can cite: *"Per FDA Drug Label (OpenFDA) for Metformin: Sever
 | File | Purpose |
 |---|---|
 | `safesignal/agent.py` | ADK root agent with SafeSignal identity and 4 clinical tools |
-| `safesignal/app.py` | A2A app with 8 FHIR scopes and 4 AgentSkills |
-| `safesignal/tools/fhir_client.py` | FHIRClient — 8 FHIR resource types |
-| `safesignal/tools/knowledge_enrichment.py` | FDA OpenFDA + RxNorm enrichment layer |
+| `safesignal/app.py` | A2A app with FHIR scopes and 4 AgentSkills |
+| `safesignal/tools/fhir_client.py` | FHIRClient — 9 FHIR resource types including ServiceRequest |
+| `safesignal/tools/knowledge_enrichment.py` | FDA OpenFDA + NLM ONCHigh + RxNorm enrichment layer |
 | `safesignal/tools/risk_briefing.py` | Tool 4: orchestrates full risk briefing |
 | `safesignal/tools/medication_safety.py` | Tool 1: medication-lab mismatch analysis |
 | `safesignal/tools/deterioration.py` | Tool 2: longitudinal deterioration detection |
 | `safesignal/tools/lost_followups.py` | Tool 3: follow-up gap detection |
-| `safesignal/prompts/clinical_prompts.py` | System prompts with FDA evidence citation instructions |
+| `safesignal/prompts/clinical_prompts.py` | System prompts with FDA/NLM evidence citation instructions |
 | `safesignal_mcp/server.py` | FastMCP server with 4 self-contained clinical tools |
 | `safesignal_mcp/app.py` | ASGI entry point for MCP SSE server |
 | `safesignal/synthetic_data/margaret_chen.json` | FHIR transaction bundle — demo patient |
 | `scripts/load_margaret_chen.py` | Load demo patient to HAPI FHIR sandbox |
-| `scripts/_run_briefing.py` | Full end-to-end test with validation checks |
+| `scripts/test_safesignal_full.py` | Full end-to-end test — 10/10 validation checks |
+| `tests/test_enrichment_unit.py` | Unit tests for enrichment logic (pytest -q) |
 
 ---
 
@@ -158,10 +167,16 @@ This loads Margaret Chen (71F, T2DM, HTN, AFib, CKD Stage 4) into the public HAP
 ### 4 — Run the full end-to-end test
 
 ```bash
-python scripts/_run_briefing.py
+python scripts/test_safesignal_full.py
 ```
 
-Output: complete risk briefing saved to `risk_briefing_output.txt`, 9/9 validation checks.
+Output: complete risk briefing printed to console, 10/10 validation checks.
+
+Run unit tests only (no API calls):
+
+```bash
+pytest -q
+```
 
 ### 5 — Start the servers
 
@@ -300,8 +315,9 @@ Use `anthropic/claude-sonnet-4-6` or `openai/gpt-4.1` for best clinical reasonin
 
 | API | Purpose | Auth |
 |---|---|---|
-| FDA OpenFDA Drug Labels (`api.fda.gov/drug/label.json`) | Boxed warnings, contraindications, warnings & precautions | Free API key |
-| RxNorm/RxNav (`rxnav.nlm.nih.gov`) | Drug ingredient normalisation to RxCUI identifiers | None |
+| FDA OpenFDA Drug Labels (`api.fda.gov/drug/label.json`) | Boxed warnings, contraindications, warnings & precautions, drug interactions text | Free API key |
+| NLM RxNav Drug Interactions (`rxnav.nlm.nih.gov/REST/interaction/`) | ONCHigh curated drug-drug interaction database, per-drug lookup | None |
+| RxNorm/RxNav (`rxnav.nlm.nih.gov/REST/rxcui.json`) | Drug ingredient normalisation to RxCUI identifiers | None |
 | HAPI FHIR Sandbox (`hapi.fhir.org/baseR4`) | Patient data for demo/testing | None |
 
 ---
@@ -312,12 +328,12 @@ Any agent on the Prompt Opinion platform can call these tools independently:
 
 | Tool | Description |
 |---|---|
-| `check_medication_safety` | Cross-reference active meds against labs, conditions, allergies. Returns FDA-label-cited findings. |
+| `check_medication_safety` | Cross-reference active meds against labs, conditions, allergies. Returns FDA-label-cited findings and NLM/FDA interaction evidence with accurate source attribution. |
 | `detect_silent_deterioration` | Longitudinal trend analysis across 24 months of Observations. Identifies progressive decline individual notes miss. |
-| `find_lost_followups` | Finds abnormal diagnostic results with no documented follow-up within clinical timeframes. |
+| `find_lost_followups` | Finds abnormal diagnostic results with no documented follow-up (checking Encounters, Procedures, and ServiceRequests) within clinical timeframes. |
 | `generate_risk_briefing` | Orchestrates all three analyses into a complete severity-ordered pre-visit risk briefing. |
 
-All tools accept `(patient_id, fhir_url, fhir_token)` and return structured natural-language analysis with FHIR evidence citations and FDA label citations.
+All tools accept `(patient_id, fhir_url, fhir_token)` and return structured natural-language analysis with FHIR evidence citations and FDA/NLM label citations.
 
 ---
 
@@ -343,6 +359,7 @@ SafeSignal is designed to support — not replace — clinical judgment:
 - Every briefing cites specific FHIR resources (resource IDs, dates, values)
 - Every briefing ends with a compliance disclaimer
 - Agent is stateless — no patient data stored after the request
+- Follow-up gap findings qualify claims against what FHIR records were available (Encounters, Procedures, ServiceRequests)
 
 ---
 
@@ -350,9 +367,9 @@ SafeSignal is designed to support — not replace — clinical judgment:
 
 Margaret Chen (patient-mc-071) — 71F, T2DM, HTN, AFib, CKD Stage 4
 
-Seven hidden risks detectable by SafeSignal, all from data that exists in the chart.
+Nine hidden risks detectable by SafeSignal, all from data that exists in the chart.
 Load to HAPI FHIR sandbox: `python scripts/load_margaret_chen.py`
-Run full briefing: `python scripts/_run_briefing.py`
+Run full briefing: `python scripts/test_safesignal_full.py`
 
 ---
 
@@ -364,6 +381,7 @@ Run full briefing: `python scripts/_run_briefing.py`
 - [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) — reusable tool exposure
 - [FHIR R4](https://hl7.org/fhir/R4/) — patient data standard
 - [FDA OpenFDA Drug Labels API](https://open.fda.gov/apis/) — regulatory drug label data
+- [NLM RxNav Drug Interactions (ONCHigh)](https://rxnav.nlm.nih.gov/) — curated clinical interaction database
 - [RxNorm/RxNav](https://rxnav.nlm.nih.gov/) — NLM drug identifier standard
 - [LiteLLM](https://github.com/BerriAI/litellm) — multi-model LLM routing
 - [FastMCP](https://github.com/jlowin/fastmcp) — MCP server framework
