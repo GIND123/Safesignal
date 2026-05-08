@@ -5,16 +5,19 @@ Exposes four clinical reasoning tools via the Model Context Protocol (MCP),
 making them available to ANY agent on the Prompt Opinion platform.
 
 Unlike the A2A agent (which relies on the agent's main LLM for clinical
-reasoning), each MCP tool here is self-contained: it fetches FHIR data AND
+reasoning), each MCP tool here is self-contained: it fetches FHIR data,
+enriches medications with FDA label warnings and NLM interaction data, then
 calls the LLM internally to produce a structured clinical analysis string.
 This makes the tools reusable by any agent without requiring the caller to
 have the SafeSignal system prompt.
 
 Tools:
   check_medication_safety       — medication-lab mismatch and compound risk analysis
+                                   with FDA label citations and NLM interaction data
   detect_silent_deterioration   — longitudinal trend analysis
   find_lost_followups           — follow-up gap detection
   generate_risk_briefing        — full pre-visit clinical risk briefing
+                                   (orchestrates all three analyses with enrichment)
 
 Transport: SSE (Server-Sent Events) for HTTP-based access
 Port: 8005
@@ -38,6 +41,7 @@ import litellm
 from mcp.server.fastmcp import FastMCP
 
 from safesignal.tools.fhir_client import FHIRClient
+from safesignal.tools.knowledge_enrichment import enrich_medications
 from safesignal.prompts.clinical_prompts import (
     MEDICATION_SAFETY_PROMPT,
     DETERIORATION_PROMPT,
@@ -53,9 +57,10 @@ mcp = FastMCP(
     name="SafeSignal Clinical Tools",
     instructions=(
         "SafeSignal MCP server. Exposes four FHIR-powered clinical reasoning tools "
-        "for medication safety analysis, deterioration detection, follow-up gap detection, "
-        "and full pre-visit risk briefing generation. All tools require a patient context "
-        "(patient_id, fhir_url, fhir_token). All findings are for clinician review only."
+        "for medication safety analysis (with FDA label + NLM interaction evidence), "
+        "deterioration detection, follow-up gap detection, and full pre-visit risk briefing "
+        "generation. All tools require a patient context (patient_id, fhir_url, fhir_token). "
+        "All findings are for clinician review only."
     ),
 )
 
@@ -91,8 +96,8 @@ def _fhir_error(exc: Exception) -> str:
     return f"FHIR connection error: {exc}"
 
 
-def _context_to_text(data: dict[str, Any]) -> str:
-    """Serialise a patient context dict to a compact JSON string for LLM consumption."""
+def _to_json(data: dict[str, Any] | list[Any]) -> str:
+    """Serialise a patient context dict/list to compact JSON for LLM consumption."""
     return json.dumps(data, indent=2, default=str)
 
 
@@ -110,11 +115,20 @@ async def check_medication_safety(
 
     Fetches active MedicationRequests, recent laboratory Observations (eGFR, HbA1c,
     potassium, INR, creatinine, sodium, ALT, AST), active Conditions, and
-    AllergyIntolerances from the FHIR server, then applies clinical reasoning to detect:
+    AllergyIntolerances from the FHIR server.
+
+    Each medication is enriched with:
+      - FDA drug label data: boxed warnings, contraindications, warnings & precautions
+        from the FDA OpenFDA Drug Labels API. The LLM cites FDA label language directly.
+      - NLM database-verified pairwise drug-drug interactions from the RxNav API.
+        These are stronger evidence than LLM training knowledge.
+
+    Then applies clinical reasoning to detect:
       - Medications contraindicated by current lab values (e.g., Metformin with eGFR < 30)
       - Therapeutic monitoring gaps (e.g., Warfarin without recent INR)
       - Compound risks from medications prescribed by different providers
       - Rising lab values that put existing medications into dangerous range
+      - Database-verified drug-drug interactions between co-prescribed medications
 
     Args:
         patient_id: FHIR Patient resource ID
@@ -123,25 +137,39 @@ async def check_medication_safety(
 
     Returns:
         Structured clinical safety analysis with severity-ordered findings,
-        FHIR evidence citations, and missing evidence notes.
-        All findings are for clinician review only.
+        FHIR evidence citations, FDA label citations, NLM interaction citations,
+        and missing evidence notes. All findings are for clinician review only.
     """
     try:
-        client = _fhir_client(fhir_url, fhir_token)
-        data   = client.get_medication_safety_data(patient_id)
+        client  = _fhir_client(fhir_url, fhir_token)
+        data    = client.get_medication_safety_data(patient_id)
         patient = client.get_patient(patient_id)
     except Exception as exc:
         return _fhir_error(exc)
 
+    # Enrich medications with FDA labels and NLM interactions
+    enrichment       = enrich_medications(data["medications"])
+    enriched_meds    = enrichment["medications_enriched"]
+    drug_interactions = enrichment["drug_interactions"]
+
+    logger.info(
+        "mcp_med_enrichment_done patient_id=%s meds=%d interactions=%d",
+        patient_id, len(enriched_meds), len(drug_interactions),
+    )
+
     user_content = (
         f"Patient: {patient.get('name', 'Unknown')}, Age {patient.get('age', 'Unknown')}, "
         f"Sex: {patient.get('sex', 'Unknown')}\n\n"
-        f"Active Medications:\n{_context_to_text(data['medications'])}\n\n"
-        f"Latest Lab Values:\n{_context_to_text(data['latest_labs'])}\n\n"
-        f"Lab Observation Series (historical):\n{_context_to_text(data['observation_series'])}\n\n"
-        f"Active Conditions:\n{_context_to_text(data['conditions'])}\n\n"
-        f"Active Allergies:\n{_context_to_text(data['allergies'])}\n\n"
-        "Perform a medication safety analysis on the above patient data."
+        f"Active Medications (enriched with FDA label data):\n{_to_json(enriched_meds)}\n\n"
+        f"NLM Database-Verified Drug Interactions:\n{_to_json(drug_interactions)}\n\n"
+        f"Latest Lab Values:\n{_to_json(data['latest_labs'])}\n\n"
+        f"Lab Observation Series (historical):\n{_to_json(data['observation_series'])}\n\n"
+        f"Active Conditions:\n{_to_json(data['conditions'])}\n\n"
+        f"Active Allergies:\n{_to_json(data['allergies'])}\n\n"
+        "Perform a medication safety analysis on the above patient data. "
+        "For medications with fda_boxed_warning, fda_contraindications, or fda_warnings fields, "
+        "quote the relevant FDA label text when citing a risk. "
+        "For entries in the NLM drug interactions list, cite them as database-verified evidence."
     )
 
     return _call_llm(MEDICATION_SAFETY_PROMPT, user_content)
@@ -177,8 +205,7 @@ async def detect_silent_deterioration(
     Returns:
         Trend analysis with severity-ordered deterioration findings,
         explicit trajectory data (first value → most recent, rate of change),
-        and FHIR evidence citations.
-        All findings are for clinician review only.
+        and FHIR evidence citations. All findings are for clinician review only.
     """
     try:
         client  = _fhir_client(fhir_url, fhir_token)
@@ -190,10 +217,10 @@ async def detect_silent_deterioration(
     user_content = (
         f"Patient: {patient.get('name', 'Unknown')}, Age {patient.get('age', 'Unknown')}, "
         f"Sex: {patient.get('sex', 'Unknown')}\n\n"
-        f"Active Conditions:\n{_context_to_text(data['conditions'])}\n\n"
+        f"Active Conditions:\n{_to_json(data['conditions'])}\n\n"
         f"Observation Series (historical, sorted oldest→newest):\n"
-        f"{_context_to_text(data['observation_series'])}\n\n"
-        f"Recent Encounter Notes:\n{_context_to_text(data['recent_encounters'])}\n\n"
+        f"{_to_json(data['observation_series'])}\n\n"
+        f"Recent Encounter Notes:\n{_to_json(data['recent_encounters'])}\n\n"
         "Analyse the above data for silent deterioration patterns."
     )
 
@@ -243,10 +270,10 @@ async def find_lost_followups(
     user_content = (
         f"Patient: {patient.get('name', 'Unknown')}, Age {patient.get('age', 'Unknown')}, "
         f"Sex: {patient.get('sex', 'Unknown')}\n\n"
-        f"Diagnostic Reports (past 12 months):\n{_context_to_text(data['diagnostic_reports'])}\n\n"
-        f"Abnormal Lab Observations (past 12 months):\n{_context_to_text(data['abnormal_labs'])}\n\n"
-        f"Subsequent Encounters:\n{_context_to_text(data['encounters'])}\n\n"
-        f"Subsequent Procedures:\n{_context_to_text(data['procedures'])}\n\n"
+        f"Diagnostic Reports (past 12 months):\n{_to_json(data['diagnostic_reports'])}\n\n"
+        f"Abnormal Lab Observations (past 12 months):\n{_to_json(data['abnormal_labs'])}\n\n"
+        f"Subsequent Encounters:\n{_to_json(data['encounters'])}\n\n"
+        f"Subsequent Procedures:\n{_to_json(data['procedures'])}\n\n"
         "Identify lost-to-follow-up findings in the above data."
     )
 
@@ -271,8 +298,12 @@ async def generate_risk_briefing(
 
     Fetches ALL relevant FHIR resources — Patient, Conditions, MedicationRequests,
     24 months of Observations, DiagnosticReports, Encounters, Procedures, and
-    AllergyIntolerances — then synthesises a complete clinical risk analysis citing
-    specific FHIR evidence for every finding.
+    AllergyIntolerances.
+
+    Medications are enriched with FDA drug label data (boxed warnings, contraindications,
+    warnings) and NLM database-verified drug-drug interactions before LLM reasoning.
+    The result is a briefing that cites FDA label language alongside FHIR evidence —
+    a level of evidence that pure LLM reasoning cannot provide.
 
     Args:
         patient_id: FHIR Patient resource ID
@@ -282,37 +313,53 @@ async def generate_risk_briefing(
 
     Returns:
         Complete SafeSignal Risk Briefing with:
-          🔴 URGENT findings (immediate patient safety risks)
-          🟡 WARNING findings (significant concerns requiring attention)
+          🔴 URGENT findings (immediate patient safety risks, with FDA label citations)
+          🟡 WARNING findings (significant concerns, with NLM interaction data where applicable)
           ℹ️  INFORMATIONAL findings (monitoring gaps, minor concerns)
           ⚕️  Compliance disclaimer
-        Each finding cites specific FHIR resource IDs, dates, and values.
+        Each finding cites specific FHIR resource IDs, dates, values,
+        and FDA/NLM evidence where available.
         All findings are for clinician review only.
     """
     try:
-        client         = _fhir_client(fhir_url, fhir_token)
+        client          = _fhir_client(fhir_url, fhir_token)
         patient_context = client.get_full_patient_context(patient_id)
     except Exception as exc:
         return _fhir_error(exc)
 
-    patient   = patient_context.get("patient", {})
-    name      = patient.get("name", "Unknown Patient")
-    age       = patient.get("age", "Unknown")
-    sex       = patient.get("sex", "Unknown")
+    # Enrich medications with FDA labels and NLM interactions
+    enrichment        = enrich_medications(patient_context["medications"])
+    enriched_meds     = enrichment["medications_enriched"]
+    drug_interactions = enrichment["drug_interactions"]
 
+    logger.info(
+        "mcp_briefing_enrichment_done patient_id=%s meds=%d interactions=%d",
+        patient_id, len(enriched_meds), len(drug_interactions),
+    )
+
+    patient      = patient_context.get("patient", {})
+    name         = patient.get("name", "Unknown Patient")
+    age          = patient.get("age", "Unknown")
+    sex          = patient.get("sex", "Unknown")
     context_line = f"\nVisit context: {context}" if context else ""
 
     user_content = (
         f"Patient: {name}, Age {age}, Sex: {sex}{context_line}\n\n"
-        f"Active Conditions:\n{_context_to_text(patient_context['conditions'])}\n\n"
-        f"Active Medications:\n{_context_to_text(patient_context['medications'])}\n\n"
+        f"Active Conditions:\n{_to_json(patient_context['conditions'])}\n\n"
+        f"Active Medications (enriched with FDA drug label data):\n{_to_json(enriched_meds)}\n\n"
+        f"NLM Database-Verified Drug Interactions:\n{_to_json(drug_interactions)}\n\n"
         f"Observation Series (historical, sorted oldest→newest):\n"
-        f"{_context_to_text(patient_context['observation_series'])}\n\n"
-        f"Diagnostic Reports (past 12 months):\n{_context_to_text(patient_context['diagnostic_reports'])}\n\n"
-        f"Recent Encounters:\n{_context_to_text(patient_context['encounters'])}\n\n"
-        f"Procedures (past 12 months):\n{_context_to_text(patient_context['procedures'])}\n\n"
-        f"Active Allergies:\n{_context_to_text(patient_context['allergies'])}\n\n"
-        f"Generate a complete SafeSignal Risk Briefing for {name}, Age {age}."
+        f"{_to_json(patient_context['observation_series'])}\n\n"
+        f"Diagnostic Reports (past 12 months):\n{_to_json(patient_context['diagnostic_reports'])}\n\n"
+        f"Recent Encounters:\n{_to_json(patient_context['encounters'])}\n\n"
+        f"Procedures (past 12 months):\n{_to_json(patient_context['procedures'])}\n\n"
+        f"Active Allergies:\n{_to_json(patient_context['allergies'])}\n\n"
+        f"Generate a complete SafeSignal Risk Briefing for {name}, Age {age}. "
+        f"Medications include FDA drug label data — quote fda_boxed_warning / "
+        f"fda_contraindications / fda_warnings text when citing medication risks. "
+        f"The drug_interactions list contains NLM database-verified interactions — "
+        f"cite these as: 'Per NLM Drug Interaction Database: [desc] (severity: [level])'. "
+        f"Cite both FHIR evidence AND FDA/NLM label evidence for every medication finding."
     )
 
     return _call_llm(SAFESIGNAL_AGENT_INSTRUCTION, user_content)

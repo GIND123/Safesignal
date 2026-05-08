@@ -3,10 +3,16 @@ SafeSignal Tool 1: check_medication_safety
 
 ADK tool function called by the SafeSignal agent when the clinician asks about
 medication safety. Fetches active medications, current/trending lab values,
-active conditions, and allergies from FHIR, then returns structured data for
-the agent's LLM to analyse using the SafeSignal clinical reasoning prompt.
+active conditions, and allergies from FHIR, enriches medication data with
+FDA label warnings and NLM drug-drug interaction data, then returns the full
+enriched dataset for the agent's LLM to analyse.
 
-Returns data — the agent's LLM does the clinical reasoning.
+The enrichment layer (knowledge_enrichment.py) adds:
+  - FDA boxed warnings, contraindications, and warnings from official drug labels
+  - NLM database-verified pairwise drug-drug interactions
+
+This means the LLM can cite FDA label language as evidence, not just its own
+training knowledge — a significant differentiator for clinical credibility.
 """
 import logging
 
@@ -14,18 +20,20 @@ import httpx
 from google.adk.tools import ToolContext
 
 from .fhir_client import FHIRClient, _get_fhir_context_from_state
+from .knowledge_enrichment import enrich_medications
 
 logger = logging.getLogger(__name__)
 
 
 def check_medication_safety(tool_context: ToolContext) -> dict:
     """
-    Retrieves medication safety data for the current patient from FHIR.
+    Retrieves and enriches medication safety data for the current patient from FHIR.
 
     Fetches active medications, recent laboratory observations (eGFR, HbA1c,
     potassium, INR, creatinine, sodium, ALT, AST), active conditions, and
-    active allergies. Returns a structured dataset for SafeSignal's clinical
-    reasoning to identify medication-lab mismatches and compound risks.
+    active allergies. Each medication is enriched with FDA drug label data
+    (boxed warnings, contraindications, warnings) and NLM drug-drug interaction
+    data before being returned for clinical reasoning.
 
     Use this tool when asked specifically about medication safety, drug
     interactions, or whether any medications need review given current labs.
@@ -53,20 +61,42 @@ def check_medication_safety(tool_context: ToolContext) -> dict:
             "error_message": f"Failed to retrieve FHIR data: {exc}",
         }
 
+    # Enrich medication list with FDA label data and NLM interactions
+    enrichment = enrich_medications(data["medications"])
+    logger.info(
+        "safesignal_med_enrichment_done meds=%d interactions=%d",
+        len(enrichment["medications_enriched"]),
+        len(enrichment["drug_interactions"]),
+    )
+
     return {
-        "status":             "success",
-        "patient_id":         patient_id,
-        "tool":               "check_medication_safety",
-        "medications":        data["medications"],
-        "latest_labs":        data["latest_labs"],
-        "observation_series": data["observation_series"],
-        "conditions":         data["conditions"],
-        "allergies":          data["allergies"],
+        "status":               "success",
+        "patient_id":           patient_id,
+        "tool":                 "check_medication_safety",
+
+        # Enriched medications (FDA labels + RxNorm identifiers)
+        "medications":          enrichment["medications_enriched"],
+
+        # NLM database-verified drug-drug interactions
+        "drug_interactions":    enrichment["drug_interactions"],
+
+        # Lab data for cross-referencing
+        "latest_labs":          data["latest_labs"],
+        "observation_series":   data["observation_series"],
+        "conditions":           data["conditions"],
+        "allergies":            data["allergies"],
+
+        "enrichment_sources":   enrichment["enrichment_sources"],
+
         "analysis_context": (
             "Analyze the above patient data for medication safety issues. "
-            "Identify medication-lab mismatches, drugs that are now contraindicated "
-            "by current lab values, monitoring gaps, and compound risks where multiple "
-            "medications together create elevated danger. Cite specific resource IDs, "
-            "dates, and values. Use severity levels URGENT / WARNING / INFORMATIONAL."
+            "Medications include FDA drug label data (fda_boxed_warning, fda_contraindications, "
+            "fda_warnings fields) — quote this language when citing risks. "
+            "drug_interactions contains NLM database-verified pairwise interactions — "
+            "cite these as authoritative evidence. "
+            "Identify medication-lab mismatches, drugs now contraindicated by current lab values, "
+            "monitoring gaps, and compound risks. "
+            "Cite specific FHIR resource IDs, dates, values, AND any FDA/NLM evidence. "
+            "Use severity levels URGENT / WARNING / INFORMATIONAL."
         ),
     }
