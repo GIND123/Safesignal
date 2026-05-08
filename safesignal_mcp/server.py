@@ -169,7 +169,8 @@ async def check_medication_safety(
         "Perform a medication safety analysis on the above patient data. "
         "For medications with fda_boxed_warning, fda_contraindications, or fda_warnings fields, "
         "quote the relevant FDA label text when citing a risk. "
-        "For entries in the NLM drug interactions list, cite them as database-verified evidence."
+        "For entries in the drug_interactions list, cite using the source field verbatim: "
+        "'Per [source]: [description] (severity: [severity])'."
     )
 
     return _call_llm(MEDICATION_SAFETY_PROMPT, user_content)
@@ -274,7 +275,9 @@ async def find_lost_followups(
         f"Abnormal Lab Observations (past 12 months):\n{_to_json(data['abnormal_labs'])}\n\n"
         f"Subsequent Encounters:\n{_to_json(data['encounters'])}\n\n"
         f"Subsequent Procedures:\n{_to_json(data['procedures'])}\n\n"
-        "Identify lost-to-follow-up findings in the above data."
+        f"Service Requests / Referrals (past 12 months):\n{_to_json(data['service_requests'])}\n\n"
+        "Identify lost-to-follow-up findings in the above data. "
+        "Check ServiceRequests for referrals before claiming no referral was documented."
     )
 
     return _call_llm(FOLLOWUP_PROMPT, user_content)
@@ -353,13 +356,14 @@ async def generate_risk_briefing(
         f"Diagnostic Reports (past 12 months):\n{_to_json(patient_context['diagnostic_reports'])}\n\n"
         f"Recent Encounters:\n{_to_json(patient_context['encounters'])}\n\n"
         f"Procedures (past 12 months):\n{_to_json(patient_context['procedures'])}\n\n"
+        f"Service Requests / Referrals (past 12 months):\n{_to_json(patient_context.get('service_requests', []))}\n\n"
         f"Active Allergies:\n{_to_json(patient_context['allergies'])}\n\n"
         f"Generate a complete SafeSignal Risk Briefing for {name}, Age {age}. "
         f"Medications include FDA drug label data — quote fda_boxed_warning / "
         f"fda_contraindications / fda_warnings text when citing medication risks. "
-        f"The drug_interactions list contains NLM database-verified interactions — "
-        f"cite these as: 'Per NLM Drug Interaction Database: [desc] (severity: [level])'. "
-        f"Cite both FHIR evidence AND FDA/NLM label evidence for every medication finding."
+        f"The drug_interactions list contains interaction evidence — each entry has a source field; "
+        f"cite using that source verbatim: 'Per [source]: [desc] (severity: [level])'. "
+        f"Cite both FHIR evidence AND FDA/interaction evidence for every medication finding."
     )
 
     return _call_llm(SAFESIGNAL_AGENT_INSTRUCTION, user_content)

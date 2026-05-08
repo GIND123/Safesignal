@@ -461,6 +461,47 @@ class FHIRClient:
             })
         return results
 
+    # ── Service Requests (referrals / orders) ─────────────────────────────────
+
+    def get_service_requests(self, patient_id: str, lookback_days: int = 365) -> list[dict]:
+        """Fetch ServiceRequest resources — represents referrals and orders."""
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=lookback_days)).strftime("%Y-%m-%d")
+        try:
+            bundle = self._get("ServiceRequest", params={
+                "patient":  patient_id,
+                "authored": f"ge{cutoff}",
+                "_sort":    "-authored",
+                "_count":   "100",
+            })
+        except Exception as exc:
+            logger.warning("fhir_get_service_requests_failed patient_id=%s err=%s", patient_id, exc)
+            return []
+
+        results = []
+        for res in self._bundle_entries(bundle):
+            code        = res.get("code", {})
+            codings     = code.get("coding", [])
+            cat_list    = res.get("category", [])
+            cat_text    = (cat_list[0].get("text", "") if cat_list else "") or (
+                _coding_display(cat_list[0].get("coding", [])) if cat_list else ""
+            )
+            reason_list = res.get("reasonCode", [])
+            reason_text = (reason_list[0].get("text", "") if reason_list else "") or (
+                _coding_display(reason_list[0].get("coding", [])) if reason_list else ""
+            )
+            results.append({
+                "display":     code.get("text") or _coding_display(codings) or "Unknown request",
+                "category":    cat_text,
+                "status":      res.get("status", ""),
+                "intent":      res.get("intent", ""),
+                "authored_on": res.get("authoredOn", ""),
+                "requester":   (res.get("requester") or {}).get("display", ""),
+                "performer":   (res.get("performer") or [{}])[0].get("display", "") if res.get("performer") else "",
+                "reason":      reason_text,
+                "resource_id": f"ServiceRequest/{res.get('id', '')}",
+            })
+        return results
+
     # ── Allergies ─────────────────────────────────────────────────────────────
 
     def get_allergies(self, patient_id: str) -> list[dict]:
@@ -514,13 +555,15 @@ class FHIRClient:
         diagnostic_reports = self.get_diagnostic_reports(patient_id, lookback_days=365)
         encounters         = self.get_encounters(patient_id, lookback_days=365)
         procedures         = self.get_procedures(patient_id, lookback_days=365)
+        service_requests   = self.get_service_requests(patient_id, lookback_days=365)
         allergies          = self.get_allergies(patient_id)
 
         logger.info(
             "safesignal_fhir_full_context_done patient_id=%s "
-            "meds=%d conditions=%d obs_series=%d reports=%d encounters=%d",
+            "meds=%d conditions=%d obs_series=%d reports=%d encounters=%d service_req=%d",
             patient_id, len(medications), len(conditions),
             len(observation_series), len(diagnostic_reports), len(encounters),
+            len(service_requests),
         )
 
         return {
@@ -531,6 +574,7 @@ class FHIRClient:
             "diagnostic_reports": diagnostic_reports,
             "encounters":         encounters,
             "procedures":         procedures,
+            "service_requests":   service_requests,
             "allergies":          allergies,
         }
 
@@ -590,6 +634,7 @@ class FHIRClient:
         diagnostic_reports = self.get_diagnostic_reports(patient_id, lookback_days=365)
         encounters         = self.get_encounters(patient_id, lookback_days=365)
         procedures         = self.get_procedures(patient_id, lookback_days=365)
+        service_requests   = self.get_service_requests(patient_id, lookback_days=365)
         # Also include abnormal lab observations
         lab_obs = [
             obs for obs in self.get_lab_observations(patient_id, lookback_days=365)
@@ -602,4 +647,5 @@ class FHIRClient:
             "abnormal_labs":      lab_obs,
             "encounters":         encounters,
             "procedures":         procedures,
+            "service_requests":   service_requests,
         }
