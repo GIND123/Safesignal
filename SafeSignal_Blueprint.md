@@ -215,6 +215,7 @@ This is not just an entry. It is a demonstration of the platform's value proposi
                                  │  • Encounter           │
                                  │  • Procedure           │
                                  │  • DiagnosticReport    │
+                                 │  • ServiceRequest      │
                                  │  • AllergyIntolerance  │
                                  └────────────────────────┘
 ```
@@ -442,6 +443,7 @@ This kind of multi-factor trajectory reasoning — combining the trend itself, t
 - DiagnosticReport (with abnormal findings)
 - Encounter (subsequent encounters after abnormal findings)
 - Procedure (follow-up procedures such as biopsies, imaging)
+- ServiceRequest (referrals and orders — GI referral, urology referral, etc.)
 - DocumentReference (referral letters, specialist notes)
 
 **Follow-Up Expectation Logic:**
@@ -646,6 +648,7 @@ on their direct assessment of the patient.
 | Encounter | Visit history, follow-up tracking | type, period, reasonCode, status |
 | Procedure | Follow-up procedures | code, performedDateTime, status |
 | DiagnosticReport | Study results, imaging findings | code, conclusion, effectiveDateTime, status |
+| ServiceRequest | Referrals and orders | code, category, status, intent, authoredOn, requester |
 | AllergyIntolerance | Drug allergy cross-check | code, clinicalStatus, type |
 
 ### FHIR Queries
@@ -668,6 +671,9 @@ GET [fhirUrl]/Encounter?patient=[patientId]&date=ge2025-04-01&_sort=-date
 
 # Procedures (past 12 months)
 GET [fhirUrl]/Procedure?patient=[patientId]&date=ge2025-04-01
+
+# Service requests / referrals (past 12 months)
+GET [fhirUrl]/ServiceRequest?patient=[patientId]&authored=ge2025-04-01&_sort=-authored
 
 # Diagnostic reports (past 12 months)
 GET [fhirUrl]/DiagnosticReport?patient=[patientId]&date=ge2025-04-01
@@ -978,7 +984,7 @@ This is the synthetic patient used for development, testing, and demo. All data 
 
 **Why this case is effective for a demo:**
 
-The case is designed to show SEVEN distinct findings of varying severity that all exist in a chart a PCP would describe as "routine follow-up." Each finding is individually plausible — the kind of thing that happens every day in busy clinics. The power of the demo is showing that a 15-minute chart review would likely catch 1-2 of these, but SafeSignal catches all 7 and explains the connections between them.
+The case is designed to show eight or more distinct findings of varying severity that all exist in a chart a PCP would describe as "routine follow-up." Each finding is individually plausible — the kind of thing that happens every day in busy clinics. The power of the demo is showing that a 15-minute chart review would likely catch 1-2 of these, but SafeSignal catches all of them and explains the connections between them.
 
 ### Patient Demographics
 
@@ -1072,13 +1078,14 @@ The case is designed to show SEVEN distinct findings of varying severity that al
 
 | # | Finding | Severity | Type |
 |---|---|---|---|
-| 1 | Metformin with eGFR 27 — below discontinuation threshold | URGENT | Medication-Lab Mismatch |
-| 2 | Ibuprofen + eGFR 27 + warfarin — compound nephrotoxicity and bleeding risk | URGENT | Medication-Lab Mismatch |
-| 3 | Positive FOBT 157 days ago with no colonoscopy or GI referral | WARNING | Lost Follow-Up |
-| 4 | eGFR declining 52→27 over 14 months, no nephrology referral | WARNING | Silent Deterioration |
-| 5 | A1c rising 7.1→8.2 over 18 months, no treatment change | WARNING | Silent Deterioration |
-| 6 | Lisinopril + potassium 5.3 + declining eGFR — hyperkalemia risk rising | WARNING | Medication-Lab Mismatch |
-| 7 | Warfarin INR overdue by ~7 weeks | INFORMATIONAL | Monitoring Gap |
+| 1 | Metformin with eGFR 27 — below discontinuation threshold (FDA label: contraindicated below eGFR 30) | URGENT | Medication-Lab Mismatch |
+| 2 | Lisinopril + potassium 5.3 + eGFR 27 — hyperkalemia risk with 38% renal decline | URGENT | Medication-Lab Mismatch |
+| 3 | Ibuprofen + Warfarin — bleeding interaction (FDA drug interactions label cited, severity: documented) | URGENT | Drug-Drug Interaction |
+| 4 | Positive FOBT 157 days ago — no colonoscopy or GI referral in ServiceRequests, Encounters, or Procedures | WARNING | Lost Follow-Up |
+| 5 | eGFR declining 52→27 over 14 months, no nephrology referral | WARNING | Silent Deterioration |
+| 6 | A1c rising 7.1→8.2 over 18 months, no treatment change | WARNING | Silent Deterioration |
+| 7 | Blood pressure rising 138/82→155/94 over 14 months despite Lisinopril | WARNING | Silent Deterioration |
+| 8 | Warfarin INR last checked 65+ days ago (FDA boxed warning: regular monitoring required) | INFORMATIONAL | Monitoring Gap |
 
 ---
 
@@ -1132,13 +1139,18 @@ The case is designed to show SEVEN distinct findings of varying severity that al
 |---|---|---|
 | Platform | Prompt Opinion | Agent hosting, marketplace, SHARP context |
 | Protocol (Agent) | A2A (Agent-to-Agent) | Agent communication and interoperability |
-| Protocol (Tools) | MCP (Model Context Protocol) | Reusable tool exposure |
-| Data Standard | FHIR R4 | Patient data retrieval |
+| Protocol (Tools) | MCP (Model Context Protocol) / FastMCP | Reusable tool exposure via SSE |
+| Data Standard | FHIR R4 | Patient data retrieval (9 resource types) |
 | Context Propagation | SHARP Extension Specs | Secure patient context handoff |
+| Agent Framework | Google ADK | ADK tools and session management |
+| LLM Routing | LiteLLM | Multi-model routing (Gemini, Claude, GPT-4.1) |
 | Language | Python 3.11+ | Agent backend |
 | Web Framework | FastAPI + Uvicorn | Agent HTTP server |
-| LLM API | Claude API (Anthropic) OR GPT-4.1 (OpenAI) OR Gemini (Google) | Clinical reasoning |
-| HTTP Client | httpx or requests | FHIR API calls |
+| LLM API | Gemini 2.5 Flash (default) / Claude / GPT-4.1 | Clinical reasoning |
+| HTTP Client | httpx | FHIR and external API calls |
+| External APIs | FDA OpenFDA Drug Labels (api.fda.gov) | Boxed warnings, contraindications, drug interactions |
+| External APIs | NLM RxNav Drug Interactions — ONCHigh | Per-drug interaction database lookup |
+| External APIs | RxNorm/RxNav (rxnav.nlm.nih.gov) | Drug ingredient to RxCUI standardization |
 | Code Hosting | GitHub | Repository |
 | Submission | Devpost | Hackathon submission |
 
@@ -1281,7 +1293,7 @@ safesignal/
 - Iterate on output formatting (make the risk briefing readable and compelling)
 - Debug and fix issues
 
-**End of Day 3 Deliverable:** Full agent working end-to-end. All 7 findings detected. Output is clear.
+**End of Day 3 Deliverable:** Full agent working end-to-end. All key findings detected (8+). Output is clear.
 
 ### Day 4 (Saturday May 10): Publish + Polish
 
@@ -1340,13 +1352,13 @@ Show: Typing in Prompt Opinion workspace:
 
 Show the risk briefing appearing. Narrate the key findings:
 
-*"SafeSignal found seven things hiding in this chart."*
+*"SafeSignal found eight things hiding in this chart."*
 
-*"First: Margaret has been on metformin for three years, but her kidney function has dropped below the threshold where most guidelines say to stop it. Nobody changed the medication because nobody looked at the trend — each individual visit just said 'CKD, monitoring.'"*
+*"First: Margaret has been on metformin for three years, but her kidney function has dropped below the threshold where the FDA says to stop it. Per the FDA drug label: 'Severe renal impairment — eGFR below 30 — contraindicated.' Nobody changed the medication because nobody looked at the trend — each individual visit just said 'CKD, monitoring.'"*
 
-*"Second: An urgent care visit three months ago added ibuprofen for knee pain. That provider didn't know Margaret's eGFR was 27. An NSAID in a patient with stage 4 CKD who's also on warfarin — that's compound risk from two prescribers who didn't see each other's context."*
+*"Second: An urgent care visit three months ago added ibuprofen for knee pain. That provider didn't know Margaret's eGFR was 27. An NSAID in a patient with stage 4 CKD who's also on warfarin — that's compound risk from two prescribers who didn't see each other's context. The FDA drug label for ibuprofen calls it out directly: 'take a blood thinning anticoagulant... are age 60 or older.' Margaret is 71."*
 
-*"Third: a positive fecal occult blood test from five months ago. No colonoscopy. No GI referral. No repeat test. One hundred fifty-seven days and counting."*
+*"Third: a positive fecal occult blood test from five months ago. No colonoscopy. No GI referral. SafeSignal checked Encounters, Procedures, and ServiceRequests before making that call. One hundred fifty-seven days and counting."*
 
 ### 1:50 – 2:20 — The Architecture Story
 

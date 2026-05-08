@@ -32,9 +32,9 @@ SafeSignal addresses this by building **both tracks of the hackathon**:
 
 **MCP Superpower — The Reusable Weapons:**
 Four FHIR-powered clinical reasoning tools exposed as an MCP server that any agent on the Prompt Opinion platform can invoke:
-- `check_medication_safety` — cross-references active medications against current lab values, conditions, and allergies
+- `check_medication_safety` — cross-references active medications against current lab values, conditions, and allergies; cites FDA drug label text alongside FHIR evidence
 - `detect_silent_deterioration` — longitudinal trend analysis across 24 months of Observations
-- `find_lost_followups` — identifies abnormal findings with no documented follow-up within clinical timeframes
+- `find_lost_followups` — identifies abnormal findings with no documented follow-up in Encounters, Procedures, or ServiceRequests within clinical timeframes
 - `generate_risk_briefing` — orchestrates all three into a complete pre-visit risk briefing
 
 **A2A Agent — The Superhero:**
@@ -42,31 +42,36 @@ An intelligent agent published to the Prompt Opinion Marketplace that uses SHARP
 
 ### What Makes This Require Generative AI
 
-Rule-based CDS can flag "eGFR < 30." But it cannot reason: "eGFR has declined from 52 to 27 over 14 months. The rate of decline suggests progression toward ESRD within 1-2 years. Each individual visit note says 'CKD, monitoring.' The concurrent diabetes with worsening A1c may be accelerating renal decline. No nephrology referral is documented. The metformin prescribed 3 years ago is now contraindicated by the current lab value." This kind of multi-factor, temporal, contextual reasoning is genuine generative AI territory.
+Rule-based CDS can flag "eGFR < 30." But it cannot reason: "eGFR has declined from 52 to 27 over 14 months. The rate of decline suggests progression toward ESRD within 6-7 months. Each individual visit note says 'CKD, monitoring.' The concurrent diabetes with worsening A1c may be accelerating renal decline. No nephrology referral is documented. The metformin prescribed 3 years ago is now contraindicated by the current lab value. And the ibuprofen added by urgent care last month — that provider had no idea eGFR was 27 — has now created compound nephrotoxicity AND bleeding risk with the warfarin." This kind of multi-factor, temporal, contextual reasoning is genuine generative AI territory.
 
 ### The Knowledge Enrichment Layer (Novel Addition)
 
-Before passing data to the LLM, SafeSignal enriches each medication with:
-- **FDA OpenFDA Drug Labels** (api.fda.gov) — official boxed warnings, contraindications, and drug interactions text from FDA-approved labeling
-- **RxNorm/RxCUI** (rxnav.nlm.nih.gov) — standardized NLM drug identifiers
+Before passing data to the LLM, SafeSignal enriches each medication with evidence from three authoritative public sources:
 
-This means the LLM cites regulatory evidence, not just training knowledge: *"Per FDA Drug Label (OpenFDA) for Metformin: Severe renal impairment (eGFR below 30 mL/min/1.73 m²)"*. This is evidence that pure rule-based CDS cannot produce and that a raw LLM call without enrichment cannot cite.
+- **RxNorm/RxCUI** (rxnav.nlm.nih.gov) — standardized NLM drug identifiers for each medication ingredient, enabling database lookups
+- **FDA OpenFDA Drug Labels** (api.fda.gov) — official boxed warnings, contraindications, and drug interactions text from FDA-approved labeling
+- **NLM RxNav Drug Interactions — ONCHigh** (rxnav.nlm.nih.gov/REST/interaction/) — per-drug interaction lookup from the National Library of Medicine's high-quality curated clinical subset, filtered to co-prescribed pairs. Where NLM finds no ONCHigh entry, FDA label drug_interactions text is scanned as a fallback.
+
+Each interaction entry carries an accurate `source` field — `"NLM RxNav (ONCHigh)"` or `"FDA Drug Label (OpenFDA) - drug interactions section"` — so the LLM cites the correct regulatory authority.
+
+This means the LLM cites regulatory evidence, not just training knowledge: *"Per FDA Drug Label (OpenFDA) - drug interactions section for Ibuprofen: '...take a blood thinning (anticoagulant)...' (severity: documented)"*. This is evidence that pure rule-based CDS cannot produce and that a raw LLM call without enrichment cannot cite.
 
 ### Demo Results
 
 Using the synthetic demo patient Margaret Chen (71F, T2DM, HTN, AFib, CKD Stage 4):
 
-**7 findings detected from a chart a PCP would call "routine follow-up":**
+**8 findings detected from a chart a PCP would call "routine follow-up":**
 
 🔴 URGENT — Metformin with eGFR 27 (FDA label: contraindicated below eGFR 30)
-🔴 URGENT — Ibuprofen + Warfarin + CKD Stage 4 (FDA + NLM interaction evidence)
-🟡 WARNING — Positive FOBT 157 days ago, no colonoscopy or GI referral
+🔴 URGENT — Lisinopril + potassium 5.3 + eGFR 27 — hyperkalemia risk with 38% renal decline
+🔴 URGENT — Ibuprofen + Warfarin — bleeding risk (FDA drug interactions label cited, severity: documented)
+🟡 WARNING — Positive FOBT 157 days ago, no colonoscopy or GI referral in ServiceRequests, Encounters, or Procedures
 🟡 WARNING — eGFR declining 52→27 over 14 months, no nephrology referral
 🟡 WARNING — A1c rising 7.1→8.2 over 18 months, no treatment change
-🟡 WARNING — Lisinopril + potassium 5.3 + declining eGFR
-ℹ️ INFO — Warfarin INR overdue by 7 weeks (FDA boxed warning cited)
+🟡 WARNING — Blood pressure rising 138/82→155/94 over 14 months despite Lisinopril
+ℹ️ INFO — Warfarin INR last checked 65 days ago (FDA boxed warning: regular monitoring required)
 
-9/9 automated validation checks pass. Briefing generated in ~29 seconds.
+10/10 automated validation checks pass. Briefing generated in ~35 seconds, 6500+ characters, cites FDA label language and accurate interaction source for every medication finding.
 
 ### Why This Architecture Wins
 
@@ -74,7 +79,7 @@ This is not just an entry — it is a demonstration of the platform's value prop
 
 ### Compliance
 
-SafeSignal is designed to support — not replace — clinical judgment. It does not diagnose, prescribe, or make treatment recommendations. Every finding uses language like "warrants clinician review." Every briefing cites specific FHIR resources with dates, values, and IDs. Every briefing ends with a compliance disclaimer. The system is functionally equivalent to clinical decision support, which the FDA has exempted from device regulation under the 21st Century Cures Act (Section 3060) when it supports rather than replaces clinical decision-making.
+SafeSignal is designed to support — not replace — clinical judgment. It does not diagnose, prescribe, or make treatment recommendations. Every finding uses language like "warrants clinician review." Every briefing cites specific FHIR resources with dates, values, and IDs. Every briefing ends with a compliance disclaimer. Follow-up gap findings qualify claims against what FHIR records were actually available (Encounters, Procedures, ServiceRequests) rather than asserting categorically that no action was taken. The system is functionally equivalent to clinical decision support, which the FDA has exempted from device regulation under the 21st Century Cures Act (Section 3060) when it supports rather than replaces clinical decision-making.
 
 ---
 
@@ -89,6 +94,7 @@ SafeSignal is designed to support — not replace — clinical judgment. It does
 - LiteLLM (multi-model routing)
 - FastMCP
 - FDA OpenFDA Drug Labels API
+- NLM RxNav Drug Interactions — ONCHigh
 - RxNorm / RxNav (NLM)
 - Gemini 2.5 Flash (default) / Claude / GPT-4.1 (configurable)
 - Python 3.11 · FastAPI · Uvicorn · httpx
@@ -160,7 +166,7 @@ gcloud run deploy safesignal-agent \
 gcloud run deploy safesignal-mcp \
   --source . \
   --region us-central1 \
-  --set-env-vars "AGENT_MODULE=safesignal_mcp.app:sse_app" \
+  --set-env-vars "AGENT_MODULE=safesignal_mcp.app:sse_app,PORT=8080" \
   --set-secrets "GOOGLE_API_KEY=google-api-key:latest,FDA_API_KEY=fda-api-key:latest" \
   --allow-unauthenticated \
   --min-instances 0 \
@@ -200,7 +206,7 @@ Follow the script in SafeSignal_Blueprint.md Section 16:
 1. 0:00-0:15 — The Hook (narrate while showing the chart)
 2. 0:15-0:40 — What SafeSignal Is (show agent card + MCP tools in Prompt Opinion)
 3. 0:40-0:50 — Invoke: type "What should I know before seeing this patient today?"
-4. 0:50-1:50 — Show the 7 findings appearing, narrate the 3 URGENT/WARNING ones
+4. 0:50-1:50 — Show the 8 findings appearing, narrate the 3 URGENT ones
 5. 1:50-2:20 — Call check_medication_safety directly as MCP tool (reusability story)
 6. 2:20-2:50 — Impact statement
 7. 2:50-3:00 — Close
@@ -239,13 +245,13 @@ Go to the Devpost hackathon page and submit with:
 
 **[0:40]** [Type in Prompt Opinion]: "What should I know before seeing this patient today?"
 
-**[0:50]** [As briefing appears]: "SafeSignal found seven things hiding in this chart."
+**[0:50]** [As briefing appears]: "SafeSignal found eight things hiding in this chart."
 
 "First: Margaret has been on metformin for three years. But her kidney function has dropped to 27 — below the threshold where the FDA says to stop it. Per the FDA drug label: 'Severe renal impairment — eGFR below 30 — contraindicated.' Nobody changed the medication because nobody looked at the trend."
 
-"Second: An urgent care visit added ibuprofen for knee pain. That provider didn't know her eGFR was 27. An NSAID in stage 4 CKD, on warfarin — that's compound risk from two prescribers who didn't see each other's context. NLM Drug Interaction Database confirms the Ibuprofen-Warfarin interaction."
+"Second: An urgent care visit added ibuprofen for knee pain. That provider didn't know her eGFR was 27. An NSAID in stage 4 CKD, on warfarin — that's compound risk from two prescribers who didn't see each other's context. The FDA drug label for ibuprofen calls it out directly: 'take a blood thinning anticoagulant... are age 60 or older.' Margaret is 71."
 
-"Third: A positive fecal occult blood test from five months ago. No colonoscopy. No GI referral. One hundred fifty-seven days and counting."
+"Third: A positive fecal occult blood test from five months ago. No colonoscopy. No GI referral. One hundred fifty-seven days and counting. SafeSignal checked Encounters, Procedures, and ServiceRequests before making that call — no referral was found in any of them."
 
 **[1:50]** [Show direct MCP tool call]: "The clinical reasoning lives in an MCP server. Any agent on this platform can call these tools. A scheduling agent. A care coordination agent. A triage agent. We didn't just solve one problem — we built infrastructure that makes the whole ecosystem smarter."
 
