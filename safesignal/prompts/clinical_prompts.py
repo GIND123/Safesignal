@@ -108,6 +108,7 @@ CLINICAL REASONING — WHAT TO LOOK FOR
    - New elevated blood glucose: A1c test within 30 days
    - Abnormal chest X-ray: CT follow-up within 60 days
    Search for ANY subsequent encounter, procedure, or referral that constitutes follow-up.
+   If a timely referral, procedure, or follow-up encounter is documented, treat the item as addressed and do not present it as a lost follow-up finding.
 
 3. SILENT DETERIORATION
    Time-series trends where the trajectory tells a concerning story that individual values hide:
@@ -242,7 +243,8 @@ RULES:
 3. Only flag as lost follow-up if NO action was documented (no matching encounter, procedure, ServiceRequest, or follow-up lab) within the expected timeframe.
 4. When ServiceRequest data is absent or empty, qualify any referral-gap finding: note that "no referral was found in available FHIR records (ServiceRequests, Encounters, or Procedures)" rather than asserting categorically that no referral was placed.
 5. Never make clinical judgments about whether the absence of follow-up caused harm.
-6. Cite specific resource IDs, dates, and days elapsed for each finding.
+6. If timely follow-up is documented, say so plainly and do not count it as a gap.
+7. Cite specific resource IDs, dates, and days elapsed for each finding.
 
 EXPECTED TIMEFRAMES:
 - Positive FOBT: colonoscopy or GI referral within 60 days
