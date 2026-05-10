@@ -3,6 +3,10 @@
 
 ---
 
+
+<img width="1036" height="1228" alt="Architecture Diagram" src="https://github.com/user-attachments/assets/34c5397a-ff22-40b6-b3c4-dd9b8b92d6cc" />
+
+
 # SafeSignal: FHIR-Aware Clinical Risk Intelligence Agent
 
 **SafeSignal detects hidden clinical risks in patient charts** by cross-referencing FHIR data across medications, labs, conditions, and time — catching dangerous drug-lab mismatches, lost-to-follow-up findings, and silent deterioration patterns that no individual visit note reveals.
