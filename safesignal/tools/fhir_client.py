@@ -27,6 +27,8 @@ LOINC codes tracked by default:
 """
 from __future__ import annotations
 
+import re
+from html import unescape
 import logging
 from datetime import datetime, timedelta, timezone
 
@@ -63,6 +65,8 @@ CANCER_SCREEN_LOINC_CODES = {
     "2857-1",   # PSA
     "10524-7",  # Cytology (Pap)
 }
+
+_HTML_TAG_RE = re.compile(r"<[^>]+>")
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -108,6 +112,19 @@ def _date_str(resource: dict) -> str:
         or resource.get("onsetDateTime")
         or ""
     )
+
+
+def _encounter_note_text(resource: dict) -> str:
+    notes_list = resource.get("note") or []
+    note_text = notes_list[0].get("text", "") if notes_list else ""
+    if note_text:
+        return note_text
+
+    narrative = (resource.get("text") or {}).get("div", "")
+    if not narrative:
+        return ""
+
+    return " ".join(unescape(_HTML_TAG_RE.sub(" ", narrative)).split())
 
 
 # ── FHIRClient ────────────────────────────────────────────────────────────────
@@ -421,8 +438,7 @@ class FHIRClient:
             ]
             reason_list  = res.get("reasonCode") or []
             reason       = reason_list[0].get("text", "") if reason_list else ""
-            notes_list   = res.get("note") or []
-            note_text    = notes_list[0].get("text", "") if notes_list else ""
+            note_text    = _encounter_note_text(res)
 
             results.append({
                 "date":          start_date,
