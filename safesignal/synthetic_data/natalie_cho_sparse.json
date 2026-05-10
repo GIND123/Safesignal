@@ -1,12 +1,12 @@
 {
   "resourceType": "Bundle",
   "id": "natalie-cho-sparse-bundle",
-  "type": "collection",
+  "type": "transaction",
   "entry": [
     {
+      "fullUrl": "urn:uuid:6cd683dd-78ef-5164-9e7d-4230c45c9889",
       "resource": {
         "resourceType": "Patient",
-        "id": "patient-nc-046",
         "name": [
           {
             "use": "official",
@@ -36,12 +36,16 @@
             "postalCode": "48104"
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Patient"
       }
     },
     {
+      "fullUrl": "urn:uuid:dbbc7bb2-3b26-535b-8950-12ee55720a55",
       "resource": {
         "resourceType": "Condition",
-        "id": "cond-nc-htn",
         "clinicalStatus": {
           "coding": [
             {
@@ -61,16 +65,20 @@
           "text": "Essential hypertension"
         },
         "subject": {
-          "reference": "Patient/patient-nc-046"
+          "reference": "urn:uuid:6cd683dd-78ef-5164-9e7d-4230c45c9889"
         },
         "onsetDateTime": "2024-04-15",
         "recordedDate": "2024-04-15"
+      },
+      "request": {
+        "method": "POST",
+        "url": "Condition"
       }
     },
     {
+      "fullUrl": "urn:uuid:06659ee0-ad5c-5066-a7e6-074dbd16577c",
       "resource": {
         "resourceType": "MedicationRequest",
-        "id": "med-nc-hctz-old",
         "status": "stopped",
         "intent": "order",
         "medicationCodeableConcept": {
@@ -84,7 +92,7 @@
           "text": "Hydrochlorothiazide 12.5mg daily"
         },
         "subject": {
-          "reference": "Patient/patient-nc-046"
+          "reference": "urn:uuid:6cd683dd-78ef-5164-9e7d-4230c45c9889"
         },
         "authoredOn": "2025-02-01",
         "requester": {
@@ -95,12 +103,16 @@
             "text": "12.5mg by mouth once daily"
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest"
       }
     },
     {
+      "fullUrl": "urn:uuid:6d7d9f7c-0db9-5b43-9ca9-4b86475999f5",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-nc-bp-1",
         "status": "final",
         "category": [
           {
@@ -124,7 +136,7 @@
           "text": "Blood Pressure"
         },
         "subject": {
-          "reference": "Patient/patient-nc-046"
+          "reference": "urn:uuid:6cd683dd-78ef-5164-9e7d-4230c45c9889"
         },
         "effectiveDateTime": "2026-02-20",
         "component": [
@@ -163,12 +175,16 @@
             }
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:9450d4f4-2fe4-5465-bcca-e3aff71cdcd9",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-nc-bp-2",
         "status": "final",
         "category": [
           {
@@ -192,7 +208,7 @@
           "text": "Blood Pressure"
         },
         "subject": {
-          "reference": "Patient/patient-nc-046"
+          "reference": "urn:uuid:6cd683dd-78ef-5164-9e7d-4230c45c9889"
         },
         "effectiveDateTime": "2026-04-04",
         "component": [
@@ -231,12 +247,16 @@
             }
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:02b7612a-07b1-5392-b3ca-9ace0d304d60",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-nc-weight-1",
         "status": "final",
         "category": [
           {
@@ -260,7 +280,7 @@
           "text": "Weight"
         },
         "subject": {
-          "reference": "Patient/patient-nc-046"
+          "reference": "urn:uuid:6cd683dd-78ef-5164-9e7d-4230c45c9889"
         },
         "effectiveDateTime": "2026-02-20",
         "valueQuantity": {
@@ -269,12 +289,16 @@
           "system": "http://unitsofmeasure.org",
           "code": "[lb_av]"
         }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:dcbeb1cf-1fa3-5940-a3fb-0c6b37c0d783",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-nc-weight-2",
         "status": "final",
         "category": [
           {
@@ -298,7 +322,7 @@
           "text": "Weight"
         },
         "subject": {
-          "reference": "Patient/patient-nc-046"
+          "reference": "urn:uuid:6cd683dd-78ef-5164-9e7d-4230c45c9889"
         },
         "effectiveDateTime": "2026-04-04",
         "valueQuantity": {
@@ -307,12 +331,16 @@
           "system": "http://unitsofmeasure.org",
           "code": "[lb_av]"
         }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:3184c782-60e8-51ce-a8cd-10b8c111e170",
       "resource": {
         "resourceType": "DiagnosticReport",
-        "id": "dr-nc-mammo",
         "status": "final",
         "category": [
           {
@@ -335,7 +363,7 @@
           "text": "Diagnostic Mammogram"
         },
         "subject": {
-          "reference": "Patient/patient-nc-046"
+          "reference": "urn:uuid:6cd683dd-78ef-5164-9e7d-4230c45c9889"
         },
         "effectiveDateTime": "2026-03-01",
         "issued": "2026-03-01T15:00:00Z",
@@ -345,12 +373,16 @@
           }
         ],
         "conclusion": "BI-RADS 5: highly suggestive of malignancy in the right breast. Tissue diagnosis recommended within 30 days."
+      },
+      "request": {
+        "method": "POST",
+        "url": "DiagnosticReport"
       }
     },
     {
+      "fullUrl": "urn:uuid:f8473972-e714-5f35-a020-8dd2d7e78d25",
       "resource": {
         "resourceType": "Encounter",
-        "id": "enc-nc-1",
         "status": "finished",
         "class": {
           "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -363,7 +395,7 @@
           }
         ],
         "subject": {
-          "reference": "Patient/patient-nc-046"
+          "reference": "urn:uuid:6cd683dd-78ef-5164-9e7d-4230c45c9889"
         },
         "participant": [
           {
@@ -385,12 +417,16 @@
           "status": "generated",
           "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Reviewed BI-RADS 5 mammogram result with patient. Urgent breast surgery and biopsy referral placed today.</div>"
         }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Encounter"
       }
     },
     {
+      "fullUrl": "urn:uuid:07a3b4dd-7980-531f-b1ff-6b26b0e0455d",
       "resource": {
         "resourceType": "Encounter",
-        "id": "enc-nc-2",
         "status": "finished",
         "class": {
           "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -403,7 +439,7 @@
           }
         ],
         "subject": {
-          "reference": "Patient/patient-nc-046"
+          "reference": "urn:uuid:6cd683dd-78ef-5164-9e7d-4230c45c9889"
         },
         "participant": [
           {
@@ -425,26 +461,34 @@
           "status": "generated",
           "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Core biopsy completed. Pathology pending and patient scheduled for follow-up review.</div>"
         }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Encounter"
       }
     },
     {
+      "fullUrl": "urn:uuid:3f6010b0-62db-5756-be9b-7a1ae1b2aaa1",
       "resource": {
         "resourceType": "Procedure",
-        "id": "proc-nc-biopsy",
         "status": "completed",
         "code": {
           "text": "Ultrasound-guided core needle biopsy of right breast"
         },
         "subject": {
-          "reference": "Patient/patient-nc-046"
+          "reference": "urn:uuid:6cd683dd-78ef-5164-9e7d-4230c45c9889"
         },
         "performedDateTime": "2026-03-10"
+      },
+      "request": {
+        "method": "POST",
+        "url": "Procedure"
       }
     },
     {
+      "fullUrl": "urn:uuid:a0ed344f-5602-5d16-b411-a1d47fc181a1",
       "resource": {
         "resourceType": "ServiceRequest",
-        "id": "sr-nc-biopsy",
         "status": "active",
         "intent": "order",
         "code": {
@@ -456,7 +500,7 @@
           }
         ],
         "subject": {
-          "reference": "Patient/patient-nc-046"
+          "reference": "urn:uuid:6cd683dd-78ef-5164-9e7d-4230c45c9889"
         },
         "authoredOn": "2026-03-02",
         "requester": {
@@ -472,6 +516,10 @@
             "text": "BI-RADS 5 diagnostic mammogram"
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "ServiceRequest"
       }
     }
   ]

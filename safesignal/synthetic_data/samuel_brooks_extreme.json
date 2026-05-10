@@ -1,12 +1,12 @@
 {
   "resourceType": "Bundle",
   "id": "samuel-brooks-extreme-bundle",
-  "type": "collection",
+  "type": "transaction",
   "entry": [
     {
+      "fullUrl": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6",
       "resource": {
         "resourceType": "Patient",
-        "id": "patient-sb-067",
         "name": [
           {
             "use": "official",
@@ -36,12 +36,16 @@
             "postalCode": "43004"
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Patient"
       }
     },
     {
+      "fullUrl": "urn:uuid:7af6ee2f-3068-5cb7-aa73-2d33baf57461",
       "resource": {
         "resourceType": "Condition",
-        "id": "cond-sb-dm",
         "clinicalStatus": {
           "coding": [
             {
@@ -61,16 +65,20 @@
           "text": "Type 2 diabetes mellitus"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "onsetDateTime": "2016-05-01",
         "recordedDate": "2016-05-01"
+      },
+      "request": {
+        "method": "POST",
+        "url": "Condition"
       }
     },
     {
+      "fullUrl": "urn:uuid:ff6439bc-8763-5515-8188-9a42b13934d8",
       "resource": {
         "resourceType": "Condition",
-        "id": "cond-sb-afib",
         "clinicalStatus": {
           "coding": [
             {
@@ -90,16 +98,20 @@
           "text": "Atrial fibrillation"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "onsetDateTime": "2020-03-12",
         "recordedDate": "2020-03-12"
+      },
+      "request": {
+        "method": "POST",
+        "url": "Condition"
       }
     },
     {
+      "fullUrl": "urn:uuid:328adbf4-04b1-5e2b-899e-e8f4c6132780",
       "resource": {
         "resourceType": "Condition",
-        "id": "cond-sb-ckd",
         "clinicalStatus": {
           "coding": [
             {
@@ -119,16 +131,20 @@
           "text": "Chronic kidney disease, stage 4"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "onsetDateTime": "2025-01-10",
         "recordedDate": "2025-01-10"
+      },
+      "request": {
+        "method": "POST",
+        "url": "Condition"
       }
     },
     {
+      "fullUrl": "urn:uuid:cd80d798-46ba-59b8-b3e2-76662aded33f",
       "resource": {
         "resourceType": "Condition",
-        "id": "cond-sb-hf",
         "clinicalStatus": {
           "coding": [
             {
@@ -148,16 +164,20 @@
           "text": "Heart failure with reduced ejection fraction"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "onsetDateTime": "2023-07-01",
         "recordedDate": "2023-07-01"
+      },
+      "request": {
+        "method": "POST",
+        "url": "Condition"
       }
     },
     {
+      "fullUrl": "urn:uuid:1e573408-3c41-57e9-ada1-c4e14aba698c",
       "resource": {
         "resourceType": "MedicationRequest",
-        "id": "med-sb-metformin",
         "status": "active",
         "intent": "order",
         "medicationCodeableConcept": {
@@ -171,7 +191,7 @@
           "text": "Metformin 1000mg BID"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "authoredOn": "2022-06-15",
         "requester": {
@@ -182,12 +202,16 @@
             "text": "1000mg by mouth twice daily with meals"
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest"
       }
     },
     {
+      "fullUrl": "urn:uuid:57fb0163-9906-5cd0-83fb-88d015d4f9e7",
       "resource": {
         "resourceType": "MedicationRequest",
-        "id": "med-sb-warfarin",
         "status": "active",
         "intent": "order",
         "medicationCodeableConcept": {
@@ -201,7 +225,7 @@
           "text": "Warfarin 5mg daily"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "authoredOn": "2020-03-15",
         "requester": {
@@ -212,12 +236,16 @@
             "text": "5mg by mouth once daily, adjust per INR"
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest"
       }
     },
     {
+      "fullUrl": "urn:uuid:232fc36c-6a67-5709-8f11-6f05b5e875ae",
       "resource": {
         "resourceType": "MedicationRequest",
-        "id": "med-sb-lisinopril",
         "status": "active",
         "intent": "order",
         "medicationCodeableConcept": {
@@ -231,7 +259,7 @@
           "text": "Lisinopril 40mg daily"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "authoredOn": "2021-09-01",
         "requester": {
@@ -242,12 +270,16 @@
             "text": "40mg by mouth once daily"
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest"
       }
     },
     {
+      "fullUrl": "urn:uuid:111869f3-f3ca-58e4-97f4-bf91d645245e",
       "resource": {
         "resourceType": "MedicationRequest",
-        "id": "med-sb-spirono",
         "status": "active",
         "intent": "order",
         "medicationCodeableConcept": {
@@ -261,7 +293,7 @@
           "text": "Spironolactone 25mg daily"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "authoredOn": "2024-02-20",
         "requester": {
@@ -272,12 +304,16 @@
             "text": "25mg by mouth once daily"
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest"
       }
     },
     {
+      "fullUrl": "urn:uuid:04827cfb-fafe-5c31-930b-f4166e337188",
       "resource": {
         "resourceType": "MedicationRequest",
-        "id": "med-sb-ibuprofen",
         "status": "active",
         "intent": "order",
         "medicationCodeableConcept": {
@@ -291,7 +327,7 @@
           "text": "Ibuprofen 600mg three times daily as needed"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "authoredOn": "2026-04-15",
         "requester": {
@@ -302,12 +338,16 @@
             "text": "600mg by mouth up to three times daily as needed for back pain"
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest"
       }
     },
     {
+      "fullUrl": "urn:uuid:f7a9b97f-c432-5dc0-9c22-bb698813415f",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-sb-egfr-1",
         "status": "final",
         "category": [
           {
@@ -331,7 +371,7 @@
           "text": "eGFR"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "effectiveDateTime": "2025-06-18",
         "valueQuantity": {
@@ -359,12 +399,16 @@
             ]
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:01126cd2-1184-51df-ac0a-f16c494b67c6",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-sb-egfr-2",
         "status": "final",
         "category": [
           {
@@ -388,7 +432,7 @@
           "text": "eGFR"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "effectiveDateTime": "2026-04-28",
         "valueQuantity": {
@@ -416,12 +460,16 @@
             ]
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:40d0b6fe-661d-5295-ac73-5ac6d2735c43",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-sb-creatinine-1",
         "status": "final",
         "category": [
           {
@@ -445,7 +493,7 @@
           "text": "Creatinine"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "effectiveDateTime": "2025-06-18",
         "valueQuantity": {
@@ -465,12 +513,16 @@
             ]
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:82708edb-398d-5d46-a770-b64f5c116f22",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-sb-creatinine-2",
         "status": "final",
         "category": [
           {
@@ -494,7 +546,7 @@
           "text": "Creatinine"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "effectiveDateTime": "2026-04-28",
         "valueQuantity": {
@@ -514,12 +566,16 @@
             ]
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:be66ea6a-d48d-5b7d-bb24-24edbdcbbe8b",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-sb-k-1",
         "status": "final",
         "category": [
           {
@@ -543,7 +599,7 @@
           "text": "Potassium"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "effectiveDateTime": "2025-06-18",
         "valueQuantity": {
@@ -563,12 +619,16 @@
             "text": "Normal: 3.5-5.0 mmol/L"
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:a2aa4128-6887-51f0-b2cb-96db16c9674e",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-sb-k-2",
         "status": "final",
         "category": [
           {
@@ -592,7 +652,7 @@
           "text": "Potassium"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "effectiveDateTime": "2026-04-28",
         "valueQuantity": {
@@ -623,12 +683,16 @@
             ]
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:c83dd013-ad98-50d6-b2bf-5dca09dcb7f6",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-sb-inr-1",
         "status": "final",
         "category": [
           {
@@ -652,7 +716,7 @@
           "text": "INR"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "effectiveDateTime": "2026-02-10",
         "valueQuantity": {
@@ -683,12 +747,16 @@
             ]
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:58a51186-e756-54d6-958c-0d2ba017dff2",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-sb-inr-2",
         "status": "final",
         "category": [
           {
@@ -712,7 +780,7 @@
           "text": "INR"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "effectiveDateTime": "2026-04-28",
         "valueQuantity": {
@@ -743,12 +811,16 @@
             ]
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:a6acf282-3a6d-5f60-b5d8-75df633042b2",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-sb-a1c-1",
         "status": "final",
         "category": [
           {
@@ -772,7 +844,7 @@
           "text": "HbA1c"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "effectiveDateTime": "2025-06-20",
         "valueQuantity": {
@@ -800,12 +872,16 @@
             ]
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:a32e7198-5ef9-5ef6-8c19-d2d491390aa0",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-sb-a1c-2",
         "status": "final",
         "category": [
           {
@@ -829,7 +905,7 @@
           "text": "HbA1c"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "effectiveDateTime": "2026-04-28",
         "valueQuantity": {
@@ -857,12 +933,16 @@
             ]
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:0f89d6b9-552e-5e39-971b-d5df89bde338",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-sb-bp-1",
         "status": "final",
         "category": [
           {
@@ -886,7 +966,7 @@
           "text": "Blood Pressure"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "effectiveDateTime": "2025-06-18",
         "component": [
@@ -925,12 +1005,16 @@
             }
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:08ad643f-7558-587b-ab24-d82b712e67c0",
       "resource": {
         "resourceType": "Observation",
-        "id": "obs-sb-bp-2",
         "status": "final",
         "category": [
           {
@@ -954,7 +1038,7 @@
           "text": "Blood Pressure"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "effectiveDateTime": "2026-04-28",
         "component": [
@@ -993,12 +1077,16 @@
             }
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
       }
     },
     {
+      "fullUrl": "urn:uuid:1b5234f6-c340-5b97-9c08-977985a26a04",
       "resource": {
         "resourceType": "DiagnosticReport",
-        "id": "dr-sb-fobt",
         "status": "final",
         "category": [
           {
@@ -1021,7 +1109,7 @@
           "text": "Fecal Occult Blood Test"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "effectiveDateTime": "2026-01-12",
         "issued": "2026-01-12T13:00:00Z",
@@ -1031,12 +1119,16 @@
           }
         ],
         "conclusion": "POSITIVE for occult blood. Colonoscopy or GI evaluation recommended within 60 days."
+      },
+      "request": {
+        "method": "POST",
+        "url": "DiagnosticReport"
       }
     },
     {
+      "fullUrl": "urn:uuid:3cbd45f6-31ab-5e86-b017-3e35187eee8f",
       "resource": {
         "resourceType": "Encounter",
-        "id": "enc-sb-1",
         "status": "finished",
         "class": {
           "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -1049,7 +1141,7 @@
           }
         ],
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "participant": [
           {
@@ -1071,12 +1163,16 @@
           "status": "generated",
           "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">67yo M here for routine follow-up. CHF and CKD appear stable on current regimen. Continue metformin, lisinopril, spironolactone, and warfarin. Recheck labs next month.</div>"
         }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Encounter"
       }
     },
     {
+      "fullUrl": "urn:uuid:d9a006ea-c8da-544a-b297-1426be625452",
       "resource": {
         "resourceType": "Encounter",
-        "id": "enc-sb-2",
         "status": "finished",
         "class": {
           "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -1089,7 +1185,7 @@
           }
         ],
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "participant": [
           {
@@ -1111,12 +1207,16 @@
           "status": "generated",
           "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Seen for low back pain. Prescribed ibuprofen 600mg as needed. No red-flag neurologic symptoms.</div>"
         }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Encounter"
       }
     },
     {
+      "fullUrl": "urn:uuid:ce407300-9e2a-56e4-8ae5-a91677fd89ba",
       "resource": {
         "resourceType": "Encounter",
-        "id": "enc-sb-3",
         "status": "finished",
         "class": {
           "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -1129,7 +1229,7 @@
           }
         ],
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "participant": [
           {
@@ -1151,26 +1251,34 @@
           "status": "generated",
           "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Reviewed positive fecal occult blood test with patient. GI referral and colonoscopy order placed today.</div>"
         }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Encounter"
       }
     },
     {
+      "fullUrl": "urn:uuid:ed8d0fbc-9b36-5a9f-ba0d-5b7e6a675e74",
       "resource": {
         "resourceType": "Procedure",
-        "id": "proc-sb-colonoscopy",
         "status": "completed",
         "code": {
           "text": "Colonoscopy with snare polypectomy"
         },
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "performedDateTime": "2026-02-03"
+      },
+      "request": {
+        "method": "POST",
+        "url": "Procedure"
       }
     },
     {
+      "fullUrl": "urn:uuid:a8efc8bd-62f8-51de-afc3-6e187e4dde72",
       "resource": {
         "resourceType": "ServiceRequest",
-        "id": "sr-sb-gi",
         "status": "active",
         "intent": "order",
         "code": {
@@ -1182,7 +1290,7 @@
           }
         ],
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "authoredOn": "2026-01-20",
         "requester": {
@@ -1198,12 +1306,16 @@
             "text": "Positive fecal occult blood test"
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "ServiceRequest"
       }
     },
     {
+      "fullUrl": "urn:uuid:6f05d9dc-0108-5824-b5cb-e1652384aece",
       "resource": {
         "resourceType": "ServiceRequest",
-        "id": "sr-sb-nephrology",
         "status": "active",
         "intent": "order",
         "code": {
@@ -1215,7 +1327,7 @@
           }
         ],
         "subject": {
-          "reference": "Patient/patient-sb-067"
+          "reference": "urn:uuid:027c058d-22ad-5912-9360-7dad722f12a6"
         },
         "authoredOn": "2026-04-29",
         "requester": {
@@ -1231,6 +1343,10 @@
             "text": "Rapid eGFR decline with potassium 6.2 mmol/L"
           }
         ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "ServiceRequest"
       }
     }
   ]
