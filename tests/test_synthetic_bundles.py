@@ -61,3 +61,15 @@ def test_all_patient_references_target_the_case_patient() -> None:
             for reference in _iter_references(resource):
                 if reference.startswith("Patient/"):
                     assert reference == patient_ref
+
+
+def test_encounters_use_portable_narrative_not_note() -> None:
+    for case in iter_cases():
+        bundle = _load_bundle(case.bundle_path)
+        for entry in bundle["entry"]:
+            resource = entry["resource"]
+            if resource["resourceType"] != "Encounter":
+                continue
+            assert "note" not in resource
+            assert resource["text"]["status"] == "generated"
+            assert resource["text"]["div"].startswith("<div xmlns=\"http://www.w3.org/1999/xhtml\">")

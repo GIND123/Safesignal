@@ -561,7 +561,7 @@
         "participant": [{"individual": {"display": "Dr. James Liu (PCP)"}}],
         "period": {"start": "2026-04-20", "end": "2026-04-20"},
         "reasonCode": [{"text": "Routine follow-up — diabetes, hypertension, CKD monitoring"}],
-        "note": [{"text": "71yo F here for routine follow-up. Diabetes — continue current management. HTN — stable. CKD — monitoring. Refill medications. Follow up 3 months."}]
+        "text": {"status": "generated", "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">71yo F here for routine follow-up. Diabetes - continue current management. HTN - stable. CKD - monitoring. Refill medications. Follow up 3 months.</div>"}
       },
       "request": {"method": "PUT", "url": "Encounter/enc-1"}
     },
@@ -577,7 +577,7 @@
         "participant": [{"individual": {"display": "Dr. Urgent Care Provider"}}],
         "period": {"start": "2026-01-20", "end": "2026-01-20"},
         "reasonCode": [{"text": "Left knee pain x 2 weeks, no trauma"}],
-        "note": [{"text": "Patient presents with left knee pain x 2 weeks. No trauma. Mild swelling. Prescribed ibuprofen 400mg PRN. Follow up with PCP if not improving."}]
+        "text": {"status": "generated", "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Patient presents with left knee pain x 2 weeks. No trauma. Mild swelling. Prescribed ibuprofen 400mg PRN. Follow up with PCP if not improving.</div>"}
       },
       "request": {"method": "PUT", "url": "Encounter/enc-2"}
     },
@@ -593,7 +593,7 @@
         "participant": [{"individual": {"display": "Dr. James Liu (PCP)"}}],
         "period": {"start": "2025-12-05", "end": "2025-12-05"},
         "reasonCode": [{"text": "Routine follow-up"}],
-        "note": [{"text": "Routine follow-up. Chronic conditions stable. Labs reviewed. Continue current management."}]
+        "text": {"status": "generated", "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Routine follow-up. Chronic conditions stable. Labs reviewed. Continue current management.</div>"}
       },
       "request": {"method": "PUT", "url": "Encounter/enc-3"}
     }

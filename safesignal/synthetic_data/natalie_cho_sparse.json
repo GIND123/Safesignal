@@ -185,7 +185,7 @@
         "participant": [{"individual": {"display": "Dr. Megan Ellis (PCP)"}}],
         "period": {"start": "2026-03-02", "end": "2026-03-02"},
         "reasonCode": [{"text": "Discuss abnormal diagnostic mammogram"}],
-        "note": [{"text": "Reviewed BI-RADS 5 mammogram result with patient. Urgent breast surgery and biopsy referral placed today."}]
+        "text": {"status": "generated", "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Reviewed BI-RADS 5 mammogram result with patient. Urgent breast surgery and biopsy referral placed today.</div>"}
       },
       "request": {"method": "PUT", "url": "Encounter/enc-nc-1"}
     },
@@ -201,7 +201,7 @@
         "participant": [{"individual": {"display": "Dr. Olivia Tran (Breast Surgery)"}}],
         "period": {"start": "2026-03-15", "end": "2026-03-15"},
         "reasonCode": [{"text": "Post-biopsy consultation"}],
-        "note": [{"text": "Core biopsy completed. Pathology pending and patient scheduled for follow-up review."}]
+        "text": {"status": "generated", "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Core biopsy completed. Pathology pending and patient scheduled for follow-up review.</div>"}
       },
       "request": {"method": "PUT", "url": "Encounter/enc-nc-2"}
     },

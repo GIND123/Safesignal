@@ -464,7 +464,7 @@
         "participant": [{"individual": {"display": "Dr. Nina Patel (PCP)"}}],
         "period": {"start": "2026-04-28", "end": "2026-04-28"},
         "reasonCode": [{"text": "Routine follow-up for heart failure, diabetes, CKD, and atrial fibrillation"}],
-        "note": [{"text": "67yo M here for routine follow-up. CHF and CKD appear stable on current regimen. Continue metformin, lisinopril, spironolactone, and warfarin. Recheck labs next month."}]
+        "text": {"status": "generated", "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">67yo M here for routine follow-up. CHF and CKD appear stable on current regimen. Continue metformin, lisinopril, spironolactone, and warfarin. Recheck labs next month.</div>"}
       },
       "request": {"method": "PUT", "url": "Encounter/enc-sb-1"}
     },
@@ -480,7 +480,7 @@
         "participant": [{"individual": {"display": "Dr. Urgent Care Provider"}}],
         "period": {"start": "2026-04-15", "end": "2026-04-15"},
         "reasonCode": [{"text": "Low back pain after lifting"}],
-        "note": [{"text": "Seen for low back pain. Prescribed ibuprofen 600mg as needed. No red-flag neurologic symptoms."}]
+        "text": {"status": "generated", "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Seen for low back pain. Prescribed ibuprofen 600mg as needed. No red-flag neurologic symptoms.</div>"}
       },
       "request": {"method": "PUT", "url": "Encounter/enc-sb-2"}
     },
@@ -496,7 +496,7 @@
         "participant": [{"individual": {"display": "Dr. Nina Patel (PCP)"}}],
         "period": {"start": "2026-01-20", "end": "2026-01-20"},
         "reasonCode": [{"text": "Discuss positive FOBT result"}],
-        "note": [{"text": "Reviewed positive fecal occult blood test with patient. GI referral and colonoscopy order placed today."}]
+        "text": {"status": "generated", "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Reviewed positive fecal occult blood test with patient. GI referral and colonoscopy order placed today.</div>"}
       },
       "request": {"method": "PUT", "url": "Encounter/enc-sb-3"}
     },
