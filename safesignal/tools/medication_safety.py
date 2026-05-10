@@ -89,14 +89,18 @@ def check_medication_safety(tool_context: ToolContext) -> dict:
         "enrichment_sources":   enrichment["enrichment_sources"],
 
         "analysis_context": (
-            "Analyze the above patient data for medication safety issues. "
-            "Medications include FDA drug label data (fda_boxed_warning, fda_contraindications, "
-            "fda_warnings fields) — quote this language when citing risks. "
-            "drug_interactions contains NLM database-verified pairwise interactions — "
-            "cite these as authoritative evidence. "
+            "Analyse the above patient data for medication safety issues. "
+            "If no active medications are on record, state that clearly and do not fabricate findings. "
+            "Medications include fda_boxed_warning, fda_contraindications, fda_warnings fields — "
+            "quote the relevant FDA label language under 'FDA/NLM Citation:' in the Evidence block. "
+            "drug_interactions contains NLM / FDA-verified pairwise interactions — cite each using "
+            "its source field verbatim: 'Per [source]: [description] (severity: [severity])'. "
             "Identify medication-lab mismatches, drugs now contraindicated by current lab values, "
-            "monitoring gaps, and compound risks. "
-            "Cite specific FHIR resource IDs, dates, values, AND any FDA/NLM evidence. "
-            "Use severity levels URGENT / WARNING / INFORMATIONAL."
+            "monitoring gaps, and compound risks from multiple prescribers. "
+            "Follow the SafeSignal output format: short finding title (include drug name and the "
+            "specific lab threshold in the title), 1–3 sentence explanation with values and dates, "
+            "Evidence block with bullet-point citations, FDA/NLM Citation block only when present, "
+            "Missing evidence only if genuinely absent — do NOT write 'Missing evidence: None identified.' "
+            "Use severity levels URGENT / WARNING / INFORMATIONAL. Omit empty sections."
         ),
     }

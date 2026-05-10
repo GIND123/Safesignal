@@ -167,10 +167,12 @@ async def check_medication_safety(
         f"Active Conditions:\n{_to_json(data['conditions'])}\n\n"
         f"Active Allergies:\n{_to_json(data['allergies'])}\n\n"
         "Perform a medication safety analysis on the above patient data. "
+        "If no active medications are present, state that clearly. "
         "For medications with fda_boxed_warning, fda_contraindications, or fda_warnings fields, "
-        "quote the relevant FDA label text when citing a risk. "
-        "For entries in the drug_interactions list, cite using the source field verbatim: "
-        "'Per [source]: [description] (severity: [severity])'."
+        "quote the relevant FDA label text under 'FDA/NLM Citation:' in the Evidence block. "
+        "For entries in the drug_interactions list, cite the source field verbatim: "
+        "'Per [source]: [description] (severity: [severity])'. "
+        "Do NOT write 'Missing evidence: None identified' — include that line only when evidence is genuinely absent."
     )
 
     return _call_llm(MEDICATION_SAFETY_PROMPT, user_content)
@@ -222,7 +224,12 @@ async def detect_silent_deterioration(
         f"Observation Series (historical, sorted oldest→newest):\n"
         f"{_to_json(data['observation_series'])}\n\n"
         f"Recent Encounter Notes:\n{_to_json(data['recent_encounters'])}\n\n"
-        "Analyse the above data for silent deterioration patterns."
+        "Analyse the above data for silent deterioration patterns. "
+        "For each series with two or more data points, state the trajectory explicitly: "
+        "'Value changed from A → B over N months (rate: X/month).' "
+        "If only one data point exists for a metric, state that a trend cannot be assessed. "
+        "Flag any discrepancy between encounter note language and objective trend data. "
+        "Do NOT write 'Missing evidence: None identified' — include that line only when evidence is genuinely absent."
     )
 
     return _call_llm(DETERIORATION_PROMPT, user_content)
@@ -277,7 +284,11 @@ async def find_lost_followups(
         f"Subsequent Procedures:\n{_to_json(data['procedures'])}\n\n"
         f"Service Requests / Referrals (past 12 months):\n{_to_json(data['service_requests'])}\n\n"
         "Identify lost-to-follow-up findings in the above data. "
-        "Check ServiceRequests for referrals before claiming no referral was documented."
+        "Search ALL sources (encounters, procedures, service_requests, labs) before concluding a gap. "
+        "A ServiceRequest mentioning the relevant specialty counts as documented follow-up. "
+        "If service_requests is empty, note that — do not assert categorically that no referral was placed. "
+        "If timely follow-up IS documented, report it as resolved under INFORMATIONAL — do not flag it as a gap. "
+        "Do NOT write 'Missing evidence: None identified' — include that line only when evidence is genuinely absent."
     )
 
     return _call_llm(FOLLOWUP_PROMPT, user_content)
@@ -359,11 +370,17 @@ async def generate_risk_briefing(
         f"Service Requests / Referrals (past 12 months):\n{_to_json(patient_context.get('service_requests', []))}\n\n"
         f"Active Allergies:\n{_to_json(patient_context['allergies'])}\n\n"
         f"Generate a complete SafeSignal Risk Briefing for {name}, Age {age}. "
-        f"Medications include FDA drug label data — quote fda_boxed_warning / "
-        f"fda_contraindications / fda_warnings text when citing medication risks. "
-        f"The drug_interactions list contains interaction evidence — each entry has a source field; "
-        f"cite using that source verbatim: 'Per [source]: [desc] (severity: [level])'. "
-        f"Cite both FHIR evidence AND FDA/interaction evidence for every medication finding."
+        f"Analyse all three domains: (1) medication-lab mismatches and compound risks, "
+        f"(2) silent deterioration in observation series, (3) lost-to-follow-up findings. "
+        f"Medications include FDA drug label data — quote fda_boxed_warning / fda_contraindications / "
+        f"fda_warnings text under 'FDA/NLM Citation:' in each Evidence block. "
+        f"drug_interactions entries each have a source field — cite verbatim: "
+        f"'Per [source]: [desc] (severity: [level])'. "
+        f"Use the SafeSignal output format: short finding title, 1–3 sentence explanation, "
+        f"Evidence block with bullet-point FHIR citations, FDA/NLM Citation block only when present. "
+        f"Do NOT write 'Missing evidence: None identified' — include it only when evidence is genuinely absent. "
+        f"Omit entire severity sections that have no findings. "
+        f"End with the compliance disclaimer."
     )
 
     return _call_llm(SAFESIGNAL_AGENT_INSTRUCTION, user_content)

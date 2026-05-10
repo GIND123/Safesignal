@@ -63,12 +63,16 @@ def detect_silent_deterioration(tool_context: ToolContext) -> dict:
         "conditions":          data["conditions"],
         "recent_encounters":   data["recent_encounters"],
         "analysis_context": (
-            "Analyze the above time-series observation data for silent deterioration. "
-            "For each tracked observation with multiple data points, assess the trajectory: "
-            "state the value change from first to most recent measurement, calculate the "
-            "approximate rate of change, and assess clinical implications. "
-            "Flag discrepancies between trend data and encounter note language "
-            "(if notes say 'stable' but data shows progressive decline, flag it explicitly). "
-            "Use severity levels URGENT / WARNING / INFORMATIONAL."
+            "Analyse the above time-series observation data for silent deterioration. "
+            "For each tracked observation series with two or more data points, state the "
+            "trajectory explicitly: 'Value changed from A → B over N months (rate: X/month).' "
+            "If only one data point exists for a metric, state that a trend cannot be assessed. "
+            "Flag discrepancies between trend data and encounter note language — if a note "
+            "says 'stable' but the data shows progressive decline, call it out explicitly. "
+            "Follow the SafeSignal output format: short finding title (include first and last "
+            "values in the title), 1–3 sentence explanation with rate and clinical context, "
+            "Evidence block with bullet points (ResourceType/ID — value, date), "
+            "Missing evidence only if genuinely absent. "
+            "Use severity levels URGENT / WARNING / INFORMATIONAL. Omit empty sections."
         ),
     }

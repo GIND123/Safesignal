@@ -64,14 +64,19 @@ def find_lost_followups(tool_context: ToolContext) -> dict:
         "abnormal_labs":      data["abnormal_labs"],
         "encounters":         data["encounters"],
         "procedures":         data["procedures"],
+        "service_requests":   data.get("service_requests", []),
         "analysis_context": (
-            "Analyze the above data to identify abnormal findings that lack documented "
-            "follow-up actions. For each diagnostic report or abnormal lab, check whether "
-            "any subsequent encounter, procedure, or referral after the finding date "
-            "constitutes appropriate follow-up within expected timeframes. "
-            "Use your clinical knowledge to determine whether documented actions constitute "
-            "adequate follow-up — do not require exact procedure name matching. "
+            "Analyse the above data to identify abnormal findings that lack documented follow-up. "
+            "For each diagnostic report or abnormal lab, check ALL four sources — encounters, "
+            "procedures, service_requests (referrals), and subsequent labs — before concluding "
+            "a gap exists. A ServiceRequest mentioning the relevant specialty counts as follow-up. "
+            "If service_requests is empty, note 'No referral records in available FHIR data' "
+            "rather than asserting categorically that no referral was placed. "
+            "If follow-up WAS completed, report it as resolved under INFORMATIONAL — do not flag it as a gap. "
             "Calculate days elapsed since each finding. "
-            "Use severity levels URGENT / WARNING / INFORMATIONAL."
+            "Follow the SafeSignal output format: short finding title, 1–3 sentence explanation, "
+            "Evidence block with bullet points, FDA/NLM Citation block only if applicable, "
+            "Missing evidence only if genuinely absent. "
+            "Use severity levels URGENT / WARNING / INFORMATIONAL. Omit empty sections."
         ),
     }
