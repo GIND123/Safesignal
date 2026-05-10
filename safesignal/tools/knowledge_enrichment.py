@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from itertools import combinations
 from typing import Optional
 
@@ -117,9 +118,15 @@ def lookup_fda_label(ingredient: str) -> dict:
             params["api_key"] = FDA_API_KEY
         try:
             resp = httpx.get(FDA_BASE_URL, params=params, timeout=_TIMEOUT)
+            if resp.status_code == 429:
+                logger.debug("fda_label_rate_limited search=%s — retrying after 2s", search_expr)
+                time.sleep(2)
+                resp = httpx.get(FDA_BASE_URL, params=params, timeout=_TIMEOUT)
             if resp.status_code == 200:
                 results = resp.json().get("results") or []
                 return results[0] if results else None
+        except KeyboardInterrupt:
+            raise
         except Exception as exc:
             logger.debug("fda_label_query_failed search=%s err=%s", search_expr, exc)
         return None
@@ -339,6 +346,7 @@ def enrich_medications(medications: list[dict]) -> dict:
         fda = lookup_fda_label(ingredient)
         if fda:
             logger.debug("fda_label_ok ingredient=%s", ingredient)
+        time.sleep(0.5)  # avoid FDA API rate limiting between consecutive lookups
 
         # ── Build enriched record ──────────────────────────────────────────────
         enriched = {**med, "rxnorm_ingredient": ingredient, "rxcui": rxcui or "not_found"}
