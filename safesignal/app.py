@@ -46,6 +46,7 @@ a2a_app = create_a2a_app(
         {"name": "patient/DiagnosticReport.rs",    "required": True},
         {"name": "patient/Encounter.rs",           "required": True},
         {"name": "patient/Procedure.rs",           "required": True},
+        {"name": "patient/ServiceRequest.rs",      "required": True},
         {"name": "patient/AllergyIntolerance.rs",  "required": True},
     ],
     skills=[
