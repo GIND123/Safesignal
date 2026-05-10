@@ -41,7 +41,7 @@ Using a synthetic demo patient (Margaret Chen, 71F with T2DM, HTN, AFib, CKD Sta
 | 8 | Blood pressure rising 138/82→155/94 over 14 months despite Lisinopril | WARNING | Silent Deterioration |
 | 9 | Warfarin INR last measured 65 days ago (FDA boxed warning: regular monitoring required) | INFO | Monitoring Gap |
 
-**Validation: 11/11 automated checks pass. Three synthetic cases now load and test cleanly, including an extreme polypharmacy case and a sparse-chart edge case.**
+**Validation: 12/12 automated checks pass. Three synthetic cases now load and test cleanly, including an extreme polypharmacy case and a sparse-chart edge case.**
 
 ---
 
@@ -124,12 +124,12 @@ This means the LLM can cite: *"Per FDA Drug Label (OpenFDA) - drug interactions 
 | `safesignal_mcp/server.py` | FastMCP server with 4 self-contained clinical tools |
 | `safesignal_mcp/app.py` | ASGI entry point for MCP SSE server |
 | `safesignal/synthetic_data/catalog.py` | Synthetic case catalog and expected test signals |
-| `safesignal/synthetic_data/margaret_chen.json` | Baseline FHIR transaction bundle |
-| `safesignal/synthetic_data/samuel_brooks_extreme.json` | Extreme polypharmacy / lab-derangement bundle |
-| `safesignal/synthetic_data/natalie_cho_sparse.json` | Sparse-chart / completed-follow-up edge-case bundle |
+| `safesignal/synthetic_data/margaret_chen.json` | Baseline portable FHIR collection bundle |
+| `safesignal/synthetic_data/samuel_brooks_extreme.json` | Extreme polypharmacy / lab-derangement collection bundle |
+| `safesignal/synthetic_data/natalie_cho_sparse.json` | Sparse-chart / completed-follow-up collection bundle |
 | `scripts/load_synthetic_patient.py` | Load any packaged synthetic case to HAPI FHIR sandbox |
 | `scripts/load_margaret_chen.py` | Backward-compatible wrapper for the original demo case |
-| `scripts/test_safesignal_full.py` | Full end-to-end test — 11/11 validation checks |
+| `scripts/test_safesignal_full.py` | Full end-to-end test — 12/12 validation checks |
 | `tests/test_enrichment_unit.py` | Unit tests for enrichment logic (pytest -q) |
 
 ---
@@ -191,7 +191,7 @@ python scripts/test_safesignal_full.py --case samuel_brooks_extreme --load
 python scripts/test_safesignal_full.py --case natalie_cho_sparse --load
 ```
 
-Output: complete MCP/LLM test path plus 11/11 validation checks for the selected case.
+Output: complete MCP/LLM test path plus 12/12 validation checks for the selected case.
 
 Run unit tests only (no API calls):
 
@@ -418,3 +418,4 @@ MIT
 ---
 
 *SafeSignal — Agents Assemble Hackathon submission. The risks are in the chart. We help you find them.*
+

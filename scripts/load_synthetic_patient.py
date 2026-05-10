@@ -12,6 +12,7 @@ import httpx
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
 
 from safesignal.synthetic_data.catalog import CASE_CHOICES, DEFAULT_CASE_KEY, get_case
+from safesignal.synthetic_data.bundle_utils import to_transaction_bundle
 
 DEFAULT_FHIR_URL = "https://hapi.fhir.org/baseR4"
 
@@ -22,6 +23,7 @@ def load_bundle(case_key: str, fhir_url: str, token: str | None) -> None:
 
     with case.bundle_path.open(encoding="utf-8") as f:
         bundle = json.load(f)
+    upload_bundle = to_transaction_bundle(bundle)
 
     headers = {"Content-Type": "application/fhir+json", "Accept": "application/fhir+json"}
     if token:
@@ -29,11 +31,14 @@ def load_bundle(case_key: str, fhir_url: str, token: str | None) -> None:
 
     print(f"Loading synthetic case '{case.key}' ({case.patient_name}) to: {fhir_url}")
     print(f"Bundle entries: {len(bundle.get('entry', []))}")
+    print(f"Bundle type: {bundle.get('type', '(missing)')}")
+    if bundle.get("type") != "transaction":
+        print("Upload mode: converted to transaction bundle to preserve stable resource IDs")
     print(f"Scenario: {case.summary}")
     print()
 
     try:
-        resp = httpx.post(fhir_url, json=bundle, headers=headers, timeout=60)
+        resp = httpx.post(fhir_url, json=upload_bundle, headers=headers, timeout=60)
         resp.raise_for_status()
     except httpx.HTTPStatusError as exc:
         print(f"ERROR: FHIR server returned HTTP {exc.response.status_code}")
@@ -45,7 +50,7 @@ def load_bundle(case_key: str, fhir_url: str, token: str | None) -> None:
 
     result = resp.json()
     entry_count = len(result.get("entry", []))
-    print(f"Bundle transaction complete. {entry_count} resources processed.")
+    print(f"Bundle upload complete. {entry_count} resources processed.")
     print()
 
     errors = []

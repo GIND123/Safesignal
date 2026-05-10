@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from safesignal.synthetic_data.catalog import iter_cases
+from safesignal.synthetic_data.bundle_utils import to_transaction_bundle
 
 
 def _load_bundle(path: Path) -> dict:
@@ -25,11 +26,11 @@ def _iter_references(node):
             yield from _iter_references(item)
 
 
-def test_bundles_are_transaction_bundles_with_one_patient() -> None:
+def test_bundles_are_collection_bundles_with_one_patient() -> None:
     for case in iter_cases():
         bundle = _load_bundle(case.bundle_path)
         assert bundle["resourceType"] == "Bundle"
-        assert bundle["type"] == "transaction"
+        assert bundle["type"] == "collection"
         patient_entries = [
             entry for entry in bundle["entry"]
             if entry["resource"]["resourceType"] == "Patient"
@@ -38,16 +39,25 @@ def test_bundles_are_transaction_bundles_with_one_patient() -> None:
         assert patient_entries[0]["resource"]["id"] == case.patient_id
 
 
-def test_bundle_request_urls_match_resource_ids() -> None:
+def test_collection_bundles_convert_to_transaction_puts() -> None:
     for case in iter_cases():
         bundle = _load_bundle(case.bundle_path)
-        for entry in bundle["entry"]:
+        converted = to_transaction_bundle(bundle)
+        assert converted["type"] == "transaction"
+        for entry in converted["entry"]:
             resource = entry["resource"]
             request = entry["request"]
             expected_url = f"{resource['resourceType']}/{resource['id']}"
             assert request["method"] == "PUT"
             assert request["url"] == expected_url
             assert entry["fullUrl"] == expected_url
+
+
+def test_collection_bundles_do_not_ship_request_metadata() -> None:
+    for case in iter_cases():
+        bundle = _load_bundle(case.bundle_path)
+        for entry in bundle["entry"]:
+            assert "request" not in entry
 
 
 def test_all_patient_references_target_the_case_patient() -> None:

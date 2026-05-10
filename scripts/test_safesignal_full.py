@@ -38,6 +38,7 @@ load_dotenv(pathlib.Path(__file__).parent.parent / ".env")
 import httpx
 
 from safesignal.synthetic_data.catalog import CASE_CHOICES, DEFAULT_CASE_KEY, SyntheticCase, get_case
+from safesignal.synthetic_data.bundle_utils import to_transaction_bundle
 
 FHIR_URL = "https://hapi.fhir.org/baseR4"
 FHIR_TOKEN = "demo-token"
@@ -227,13 +228,16 @@ def load_patient(fhir_url: str, case: SyntheticCase) -> bool:
 
     with case.bundle_path.open(encoding="utf-8") as f:
         bundle = json.load(f)
+    upload_bundle = to_transaction_bundle(bundle)
 
-    _info(f"POSTing transaction bundle ({len(bundle.get('entry', []))} entries) to {fhir_url}")
+    _info(
+        f"POSTing upload bundle ({len(upload_bundle.get('entry', []))} entries, source type={bundle.get('type', '(missing)')}) to {fhir_url}"
+    )
 
     try:
         resp = httpx.post(
             fhir_url,
-            json=bundle,
+            json=upload_bundle,
             headers={"Content-Type": "application/fhir+json", "Accept": "application/fhir+json"},
             timeout=60,
         )
