@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import pathlib
 import sys
 
 import httpx
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
 
 from safesignal.synthetic_data.catalog import CASE_CHOICES, DEFAULT_CASE_KEY, get_case
 

@@ -41,7 +41,7 @@ Using a synthetic demo patient (Margaret Chen, 71F with T2DM, HTN, AFib, CKD Sta
 | 8 | Blood pressure rising 138/82→155/94 over 14 months despite Lisinopril | WARNING | Silent Deterioration |
 | 9 | Warfarin INR last measured 65 days ago (FDA boxed warning: regular monitoring required) | INFO | Monitoring Gap |
 
-**Validation: 10/10 automated checks pass. Briefing generated in ~35s, 7000+ characters, cites FDA label language and interaction source for every medication finding.**
+**Validation: 11/11 automated checks pass. Three synthetic cases now load and test cleanly, including an extreme polypharmacy case and a sparse-chart edge case.**
 
 ---
 
@@ -123,9 +123,13 @@ This means the LLM can cite: *"Per FDA Drug Label (OpenFDA) - drug interactions 
 | `safesignal/prompts/clinical_prompts.py` | System prompts with FDA/NLM evidence citation instructions |
 | `safesignal_mcp/server.py` | FastMCP server with 4 self-contained clinical tools |
 | `safesignal_mcp/app.py` | ASGI entry point for MCP SSE server |
-| `safesignal/synthetic_data/margaret_chen.json` | FHIR transaction bundle — demo patient |
-| `scripts/load_margaret_chen.py` | Load demo patient to HAPI FHIR sandbox |
-| `scripts/test_safesignal_full.py` | Full end-to-end test — 10/10 validation checks |
+| `safesignal/synthetic_data/catalog.py` | Synthetic case catalog and expected test signals |
+| `safesignal/synthetic_data/margaret_chen.json` | Baseline FHIR transaction bundle |
+| `safesignal/synthetic_data/samuel_brooks_extreme.json` | Extreme polypharmacy / lab-derangement bundle |
+| `safesignal/synthetic_data/natalie_cho_sparse.json` | Sparse-chart / completed-follow-up edge-case bundle |
+| `scripts/load_synthetic_patient.py` | Load any packaged synthetic case to HAPI FHIR sandbox |
+| `scripts/load_margaret_chen.py` | Backward-compatible wrapper for the original demo case |
+| `scripts/test_safesignal_full.py` | Full end-to-end test — 11/11 validation checks |
 | `tests/test_enrichment_unit.py` | Unit tests for enrichment logic (pytest -q) |
 
 ---
@@ -156,13 +160,23 @@ cp .env.example .env
 # Edit .env and set GOOGLE_API_KEY and FDA_API_KEY
 ```
 
-### 3 — Load demo patient to FHIR sandbox
+### 3 — Load a synthetic patient to the FHIR sandbox
 
 ```bash
-python scripts/load_margaret_chen.py
+python scripts/load_synthetic_patient.py --case margaret_chen
 ```
 
-This loads Margaret Chen (71F, T2DM, HTN, AFib, CKD Stage 4) into the public HAPI FHIR sandbox with all 30 resources needed for the demo.
+Available cases:
+
+- `margaret_chen` — baseline CKD, diabetes, anticoagulation, and missed FOBT follow-up
+- `samuel_brooks_extreme` — severe CKD decline, hyperkalemia, supratherapeutic INR, polypharmacy, documented GI/nephrology follow-up
+- `natalie_cho_sparse` — sparse chart with no active meds and timely mammogram-to-biopsy follow-up
+
+List them from the CLI with:
+
+```bash
+python scripts/load_synthetic_patient.py --list-cases
+```
 
 ### 4 — Run the full end-to-end test
 
@@ -170,7 +184,14 @@ This loads Margaret Chen (71F, T2DM, HTN, AFib, CKD Stage 4) into the public HAP
 python scripts/test_safesignal_full.py
 ```
 
-Output: complete risk briefing printed to console, 10/10 validation checks.
+Example alternate cases:
+
+```bash
+python scripts/test_safesignal_full.py --case samuel_brooks_extreme --load
+python scripts/test_safesignal_full.py --case natalie_cho_sparse --load
+```
+
+Output: complete MCP/LLM test path plus 11/11 validation checks for the selected case.
 
 Run unit tests only (no API calls):
 
@@ -363,13 +384,14 @@ SafeSignal is designed to support — not replace — clinical judgment:
 
 ---
 
-## Demo Patient
+## Demo Cases
 
-Margaret Chen (patient-mc-071) — 71F, T2DM, HTN, AFib, CKD Stage 4
+- `margaret_chen` (`patient-mc-071`) — baseline happy path with nine hidden risks and missed FOBT follow-up
+- `samuel_brooks_extreme` (`patient-sb-067`) — extreme polypharmacy, hyperkalemia, INR 4.8, rapid CKD decline, documented colonoscopy and nephrology follow-up
+- `natalie_cho_sparse` (`patient-nc-046`) — sparse chart, no active meds, BI-RADS 5 mammogram with timely biopsy and post-biopsy follow-up
 
-Nine hidden risks detectable by SafeSignal, all from data that exists in the chart.
-Load to HAPI FHIR sandbox: `python scripts/load_margaret_chen.py`
-Run full briefing: `python scripts/test_safesignal_full.py`
+Load to HAPI FHIR sandbox: `python scripts/load_synthetic_patient.py --case <case-name>`
+Run full briefing/test path: `python scripts/test_safesignal_full.py --case <case-name> --load`
 
 ---
 
