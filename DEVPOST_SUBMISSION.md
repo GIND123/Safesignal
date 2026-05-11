@@ -11,7 +11,7 @@ SafeSignal: FHIR-Aware Clinical Risk Intelligence Agent
 
 ## Short Description (tagline)
 
-SafeSignal detects hidden clinical risks hiding between EHR data silos — dangerous drug-lab mismatches, silent deterioration patterns, and missed follow-up gaps that only become visible when medications, labs, conditions, and time are analysed together.
+SafeSignal uncovers hidden clinical risks across EHR silos by linking medications, labs, conditions, and timelines to detect drug-lab conflicts, silent deterioration, and missed follow-ups.
 
 ---
 
